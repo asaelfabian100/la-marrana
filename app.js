@@ -769,7 +769,7 @@ function construirResumenWhatsApp() {
     prestamosTexto,
     "",
     "Resumen enviado desde La Marrana.",
-    "Hecho por Wolf 🐺"
+    "Hecho por Wolf \uD83D\uDC3A"
   ].join("\n");
 }
 
