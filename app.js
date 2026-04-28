@@ -721,7 +721,6 @@ function setupPiggyToggles() {
       <span class="pig-eye pig-eye-left"></span>
       <span class="pig-eye pig-eye-right"></span>
       <span class="pig-snout"></span>
-      <span class="pig-arrow">⌄</span>
     `;
     summary.appendChild(pig);
   });

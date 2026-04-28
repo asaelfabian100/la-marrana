@@ -417,16 +417,29 @@ select + input {
 
 .pig-eye {
   position: absolute;
-  top: 12px;
-  width: 4px;
-  height: 4px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  background: var(--brand-dark);
-  transition: width .14s ease, height .14s ease, top .14s ease;
+  background: #ffffff;
+  border: 1.5px solid rgba(84, 28, 18, .65);
+  box-shadow: 0 1px 1px rgba(84, 28, 18, .08);
+  transition: width .14s ease, height .14s ease, top .14s ease, border .14s ease, background .14s ease, transform .14s ease;
 }
 
-.pig-eye-left { left: 12px; }
-.pig-eye-right { right: 12px; }
+.pig-eye::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 999px;
+  background: var(--brand-dark);
+}
+
+.pig-eye-left { left: 9px; }
+.pig-eye-right { right: 9px; }
 
 .pig-snout {
   position: absolute;
@@ -455,32 +468,32 @@ select + input {
 .pig-snout::before { left: 5px; }
 .pig-snout::after { right: 5px; }
 
-.pig-arrow {
-  position: absolute;
-  left: 50%;
-  bottom: -2px;
-  transform: translateX(-50%);
-  color: var(--brand-dark);
-  font-size: 15px;
-  font-weight: 950;
-  line-height: 1;
-  transition: transform .16s ease;
+.section-toggle:not([open]) .pig-eye {
+  top: 12px;
+  width: 9px;
+  height: 5px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid rgba(84, 28, 18, .75);
+  border-radius: 0 0 999px 999px;
+  box-shadow: none;
 }
 
-.section-toggle:not([open]) .pig-eye {
-  top: 13px;
-  width: 8px;
-  height: 2px;
-  border-radius: 999px;
+.section-toggle:not([open]) .pig-eye::after {
+  display: none;
+}
+
+.section-toggle:not([open]) .pig-eye-left {
+  transform: rotate(7deg);
+}
+
+.section-toggle:not([open]) .pig-eye-right {
+  transform: rotate(-7deg);
 }
 
 .section-toggle[open] .pig-toggle {
   background: linear-gradient(180deg, #fffaf6 0%, #f7dfd4 100%);
   box-shadow: inset 0 -2px 0 rgba(143, 52, 36, .07), 0 6px 12px rgba(92, 32, 23, .08);
-}
-
-.section-toggle[open] .pig-arrow {
-  transform: translateX(-50%) rotate(180deg);
 }
 
 .section-toggle > summary span {
