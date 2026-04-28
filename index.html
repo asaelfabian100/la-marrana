@@ -41,8 +41,15 @@
       </div>
     </section>
 
+    <section class="card compact-card">
+      <h3>Extras que cayeron</h3>
+      <p class="helper">Aquí se separa la lana que no era tu sueldo base.</p>
+      <ul id="listaExtras" class="list"></ul>
+    </section>
+
     <section class="card">
       <h3>Ya puso</h3>
+      <p class="helper">Usa esto para tu sueldo fijo o ingreso constante.</p>
       <div class="form">
         <label>¿Cuánto te cayó?
           <input id="montoIngreso" type="number" inputmode="decimal" placeholder="Ej. 5000">
@@ -55,8 +62,22 @@
 
       <div class="divider"></div>
 
-      <h3 class="subhead">Me equivoqué, esto no lo recibí</h3>
-      <p class="helper">Úsalo cuando apuntaste lana de más o cuando algo que esperabas no cayó.</p>
+      <h3 class="subhead">Me cayó extra</h3>
+      <p class="helper">Úsalo para bonos, ventas, transferencias, devoluciones o cualquier lana que no esperabas.</p>
+      <div class="form">
+        <label>¿Cuánto cayó extra?
+          <input id="montoExtra" type="number" inputmode="decimal" placeholder="Ej. 700">
+        </label>
+        <label>¿Qué fue?
+          <input id="notaExtra" type="text" placeholder="Ej. venta, bono, devolución">
+        </label>
+        <button id="guardarExtra" class="secondary">Sumar extra</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 class="subhead">Me equivoqué, no cayó</h3>
+      <p class="helper">Úsalo cuando apuntaste lana de más o cuando algo que esperabas no llegó.</p>
       <div class="form">
         <label>¿Cuánto no llegó?
           <input id="montoNoRecibido" type="number" inputmode="decimal" placeholder="Ej. 500">

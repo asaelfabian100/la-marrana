@@ -210,3 +210,11 @@ button:active {
   font-size: 18px;
   margin-top: 0;
 }
+
+.compact-card {
+  margin-top: 14px;
+}
+
+.compact-card h3 {
+  margin-bottom: 6px;
+}
