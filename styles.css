@@ -43,7 +43,44 @@ body {
 }
 
 .hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   padding: 28px 4px 18px;
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
+.last-move-badge {
+  flex: 0 0 auto;
+  max-width: 178px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(143, 52, 36, .16);
+  border-radius: 18px;
+  background: rgba(255, 254, 253, .76);
+  box-shadow: 0 10px 24px rgba(92, 32, 23, .07);
+  text-align: right;
+}
+
+.last-move-badge span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--soft);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.last-move-badge strong {
+  display: block;
+  color: var(--brand-dark);
+  font-size: 12px;
+  line-height: 1.25;
 }
 
 .eyebrow {
@@ -93,13 +130,36 @@ h1 {
 }
 
 .status-card {
-  border-left: 8px solid var(--brand);
+  position: relative;
+  padding: 14px 16px;
+  border-left: 0;
+  border-color: rgba(143, 52, 36, .18);
+  background:
+    linear-gradient(135deg, rgba(255, 241, 231, .96), rgba(255, 254, 253, .96));
+  box-shadow: 0 10px 24px rgba(92, 32, 23, .06);
 }
 
-.status-card.tranquilo { border-left-color: var(--green); }
-.status-card.aguas { border-left-color: var(--yellow); }
-.status-card.aguante { border-left-color: var(--orange); }
-.status-card.roja { border-left-color: var(--red); }
+.status-card.tranquilo { border-color: rgba(31, 122, 77, .22); background: linear-gradient(135deg, rgba(232, 247, 239, .95), rgba(255, 254, 253, .96)); }
+.status-card.aguas { border-color: rgba(154, 101, 13, .22); background: linear-gradient(135deg, rgba(255, 247, 223, .96), rgba(255, 254, 253, .96)); }
+.status-card.aguante { border-color: rgba(180, 74, 28, .22); background: linear-gradient(135deg, rgba(255, 238, 226, .96), rgba(255, 254, 253, .96)); }
+.status-card.roja { border-color: rgba(163, 31, 31, .24); background: linear-gradient(135deg, rgba(255, 235, 235, .96), rgba(255, 254, 253, .96)); }
+
+.status-card h2 {
+  margin: 4px 0 6px;
+  font-size: clamp(21px, 5vw, 24px);
+}
+
+.status-card #estadoMensaje {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(143, 52, 36, .14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .66);
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.35;
+}
 
 .label {
   margin: 0;
@@ -681,4 +741,18 @@ select + input {
 
 .app-footer strong {
   color: var(--brand-dark);
+}
+
+@media (max-width: 560px) {
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .last-move-badge {
+    max-width: none;
+    width: 100%;
+    text-align: left;
+  }
 }

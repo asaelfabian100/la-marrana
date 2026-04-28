@@ -36,21 +36,3 @@ Primera versión funcional de la app **La Marrana**.
 ## Nota
 
 Esta versión usa `localStorage` para simplificar el MVP. En una siguiente versión se puede migrar a IndexedDB.
-
-
-## Mejoras MVP 1.1
-
-- El registro de “¿Cuánto te cayó?” ahora es acumulativo.
-- Se agregó la opción “Me equivoqué, esto no lo recibí” para descontar dinero que no llegó.
-- Se agregó historial visible de movimientos de lana.
-- El CSV ahora exporta ingresos y descuentos de dinero no recibido.
-- Se actualizó el service worker a cache v2 para forzar la actualización offline.
-
-## Mejoras MVP 1.2
-
-- Se agrega la sección “Me cayó extra” para registrar ingresos fuera del sueldo base.
-- Se agrega un bloque visible “Extras que cayeron” debajo del resumen de dinero para identificar de dónde vinieron esos ingresos extras.
-- “Ya puso” queda reservado para sueldo fijo o ingresos constantes.
-- El historial de movimientos distingue ingreso base, ingreso extra y dinero no recibido.
-- El CSV exporta el tipo de movimiento como `ingreso_base`, `ingreso_extra` o `no_recibido`.
-- Se actualizó el service worker a cache v3 para forzar la nueva versión en GitHub Pages.
