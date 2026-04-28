@@ -6,15 +6,30 @@ const $ = (id) => document.getElementById(id);
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
+  const defaultState = {
+    ingresoActual: 0,
+    proximaFechaPago: "",
+    pagos: [],
+    gastos: [],
+    movimientosLana: []
+  };
+
+  if (!raw) return defaultState;
+
+  try {
+    const saved = JSON.parse(raw);
+
     return {
-      ingresoActual: 0,
-      proximaFechaPago: "",
-      pagos: [],
-      gastos: []
+      ...defaultState,
+      ...saved,
+      ingresoActual: Number(saved.ingresoActual || 0),
+      pagos: Array.isArray(saved.pagos) ? saved.pagos : [],
+      gastos: Array.isArray(saved.gastos) ? saved.gastos : [],
+      movimientosLana: Array.isArray(saved.movimientosLana) ? saved.movimientosLana : []
     };
+  } catch (error) {
+    return defaultState;
   }
-  return JSON.parse(raw);
 }
 
 function saveState() {
@@ -56,7 +71,7 @@ function getTotals() {
 }
 
 function getEstado(dineroLibre, gastoDiario, dias) {
-  if (!state.ingresoActual || !state.proximaFechaPago) {
+  if (!state.ingresoActual && !state.proximaFechaPago) {
     return {
       clase: "",
       titulo: "Vamos a repartir la lana",
@@ -128,6 +143,17 @@ function render() {
 
   $("proximaFecha").value = state.proximaFechaPago || "";
 
+  $("listaMovimientosLana").innerHTML = state.movimientosLana.slice().reverse().slice(0, 8).map((m) => {
+    const signo = m.tipo === "ingreso" ? "+" : "-";
+    const etiqueta = m.tipo === "ingreso" ? "Cayó lana" : "No recibido";
+    return `
+      <li>
+        <span>${etiqueta} · ${m.nota || "Sin nota"} · ${m.fecha}</span>
+        <strong>${signo}${money(m.monto)}</strong>
+      </li>
+    `;
+  }).join("");
+
   $("listaPagos").innerHTML = state.pagos.map((p, index) => `
     <li>
       <span>${p.concepto || "Pago"}</span>
@@ -156,6 +182,7 @@ function addMiniButtonStyle() {
       color: #541c12;
       font-size: 22px;
       line-height: 1;
+      flex: 0 0 34px;
     }
   `;
   document.head.appendChild(style);
@@ -180,9 +207,40 @@ $("guardarIngreso").addEventListener("click", () => {
     return;
   }
 
-  state.ingresoActual = monto;
+  state.ingresoActual = Number(state.ingresoActual || 0) + monto;
   state.proximaFechaPago = fecha;
+
+  state.movimientosLana.push({
+    tipo: "ingreso",
+    monto,
+    nota: "Ya puso",
+    fecha: new Date().toISOString().slice(0, 10)
+  });
+
   $("montoIngreso").value = "";
+  saveState();
+});
+
+$("guardarNoRecibido").addEventListener("click", () => {
+  const monto = Number($("montoNoRecibido").value);
+  const nota = $("notaNoRecibido").value.trim();
+
+  if (!monto || monto <= 0) {
+    alert("Pon cuánto no llegó.");
+    return;
+  }
+
+  state.ingresoActual = Number(state.ingresoActual || 0) - monto;
+
+  state.movimientosLana.push({
+    tipo: "no_recibido",
+    monto,
+    nota: nota || "Esto no lo recibí",
+    fecha: new Date().toISOString().slice(0, 10)
+  });
+
+  $("montoNoRecibido").value = "";
+  $("notaNoRecibido").value = "";
   saveState();
 });
 
@@ -247,6 +305,12 @@ $("evaluarCompra").addEventListener("click", () => {
 $("exportarCSV").addEventListener("click", () => {
   const rows = [
     ["tipo", "concepto_nota", "monto", "fecha"],
+    ...state.movimientosLana.map(m => [
+      m.tipo === "ingreso" ? "ingreso" : "no_recibido",
+      m.nota,
+      m.tipo === "ingreso" ? m.monto : -Math.abs(Number(m.monto)),
+      m.fecha
+    ]),
     ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha]),
     ...state.gastos.map(g => ["gasto", g.nota, g.monto, g.fecha])
   ];

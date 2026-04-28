@@ -36,3 +36,12 @@ Primera versión funcional de la app **La Marrana**.
 ## Nota
 
 Esta versión usa `localStorage` para simplificar el MVP. En una siguiente versión se puede migrar a IndexedDB.
+
+
+## Mejoras MVP 1.1
+
+- El registro de “¿Cuánto te cayó?” ahora es acumulativo.
+- Se agregó la opción “Me equivoqué, esto no lo recibí” para descontar dinero que no llegó.
+- Se agregó historial visible de movimientos de lana.
+- El CSV ahora exporta ingresos y descuentos de dinero no recibido.
+- Se actualizó el service worker a cache v2 para forzar la actualización offline.

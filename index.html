@@ -52,6 +52,22 @@
         </label>
         <button id="guardarIngreso">Guardar lana</button>
       </div>
+
+      <div class="divider"></div>
+
+      <h3 class="subhead">Me equivoqué, esto no lo recibí</h3>
+      <p class="helper">Úsalo cuando apuntaste lana de más o cuando algo que esperabas no cayó.</p>
+      <div class="form">
+        <label>¿Cuánto no llegó?
+          <input id="montoNoRecibido" type="number" inputmode="decimal" placeholder="Ej. 500">
+        </label>
+        <label>Nota rápida
+          <input id="notaNoRecibido" type="text" placeholder="Ej. bono incompleto, transferencia cancelada">
+        </label>
+        <button id="guardarNoRecibido" class="secondary">Descontar lana</button>
+      </div>
+
+      <ul id="listaMovimientosLana" class="list"></ul>
     </section>
 
     <section class="card">
