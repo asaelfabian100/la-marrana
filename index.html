@@ -45,13 +45,49 @@
       <div class="piggy-head">
         <div>
           <p class="label">La Marranita</p>
-          <h3>Lo que se salvó</h3>
+          <h3>Lana guardada</h3>
         </div>
         <strong id="ahorroTotal" class="piggy-total">$0</strong>
       </div>
-      <p id="mensajeAhorro" class="helper">Cuando llegue el día de pago, guarda lo que sobró para ver cuánto vas juntando.</p>
-      <button id="guardarSobrante" class="secondary">Guardar lo que sobró</button>
+      <p id="mensajeAhorro" class="helper">Aquí metes la lana que ya decidiste no tocar. Sale de “Traes ahorita” y se va al cochinito.</p>
+      <div class="form">
+        <label>¿Cuánto vas a guardar?
+          <input id="montoAhorro" type="number" inputmode="decimal" placeholder="Ej. 300">
+        </label>
+        <label>¿Para qué la guardas?
+          <input id="notaAhorro" type="text" placeholder="Ej. ahorro, emergencia, meta">
+        </label>
+        <button id="guardarSobrante" class="secondary">Meter al cochinito</button>
+      </div>
       <ul id="listaAhorros" class="list"></ul>
+    </section>
+
+    <section class="card compact-card">
+      <div class="piggy-head">
+        <div>
+          <p class="label">Préstamos</p>
+          <h3>Lana que anda fuera</h3>
+        </div>
+        <strong id="prestadoPendiente" class="piggy-total">$0</strong>
+      </div>
+      <p class="helper">Para no andar pensando “¿a quién le presté?”. Al prestarla, sale de “Traes ahorita”; cuando te paguen, regresa.</p>
+      <div class="form">
+        <label>¿A quién le prestaste?
+          <input id="personaPrestamo" type="text" placeholder="Ej. Luis, Ana, mi primo">
+        </label>
+        <label>¿Cuánto le soltaste?
+          <input id="montoPrestamo" type="number" inputmode="decimal" placeholder="Ej. 500">
+        </label>
+        <label>¿Cuándo fue?
+          <input id="fechaPrestamo" type="date">
+        </label>
+        <label>Nota rápida
+          <input id="notaPrestamo" type="text" placeholder="Ej. comida, emergencia, Uber">
+        </label>
+        <button id="guardarPrestamo" class="secondary">Anotar préstamo</button>
+      </div>
+      <ul id="listaPrestamos" class="list"></ul>
+      <ul id="listaPrestamosPagados" class="list paid-list"></ul>
     </section>
 
     <section class="card compact-card">

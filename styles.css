@@ -338,3 +338,30 @@ button:active {
   color: var(--soft);
   font-weight: 700;
 }
+
+.loan-row {
+  align-items: flex-start;
+}
+
+.loan-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.mini-text {
+  width: auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.paid-list {
+  margin-top: 0;
+  opacity: .85;
+}

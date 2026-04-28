@@ -1,4 +1,4 @@
-const CACHE_NAME = "la-marrana-cache-v6";
+const CACHE_NAME = "la-marrana-cache-v7";
 const ASSETS = [
   "./",
   "./index.html",

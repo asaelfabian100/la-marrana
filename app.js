@@ -17,7 +17,8 @@ function loadState() {
     pagos: [],
     gastos: [],
     movimientosLana: [],
-    ahorros: []
+    ahorros: [],
+    prestamos: []
   };
 
   if (!raw) return defaultState;
@@ -32,7 +33,8 @@ function loadState() {
       pagos: Array.isArray(saved.pagos) ? saved.pagos : [],
       gastos: Array.isArray(saved.gastos) ? saved.gastos : [],
       movimientosLana: Array.isArray(saved.movimientosLana) ? saved.movimientosLana : [],
-      ahorros: Array.isArray(saved.ahorros) ? saved.ahorros : []
+      ahorros: Array.isArray(saved.ahorros) ? saved.ahorros : [],
+      prestamos: Array.isArray(saved.prestamos) ? saved.prestamos : []
     };
   } catch (error) {
     return defaultState;
@@ -79,10 +81,13 @@ function getTotals() {
   const dineroTotal = Number(state.ingresoActual || 0) - totalGastos;
   const dineroDueno = state.pagos.reduce((sum, item) => sum + Number(item.monto), 0);
   const dineroLibre = dineroTotal - dineroDueno;
+  const prestadoPendiente = state.prestamos
+    .filter((item) => item.estado !== "pagado")
+    .reduce((sum, item) => sum + Number(item.monto || 0), 0);
   const dias = daysUntil(state.proximaFechaPago);
   const gastoDiario = dias > 0 ? dineroLibre / dias : dineroLibre;
 
-  return { totalGastos, dineroTotal, dineroDueno, dineroLibre, dias, gastoDiario };
+  return { totalGastos, dineroTotal, dineroDueno, dineroLibre, prestadoPendiente, dias, gastoDiario };
 }
 
 function getEstado(dineroLibre, gastoDiario, dias) {
@@ -146,6 +151,8 @@ function getTipoMovimiento(movimiento) {
   if (movimiento.tipo === "ingreso_base") return "ingreso_base";
   if (movimiento.tipo === "no_recibido") return "no_recibido";
   if (movimiento.tipo === "ahorro") return "ahorro";
+  if (movimiento.tipo === "prestamo") return "prestamo";
+  if (movimiento.tipo === "prestamo_pagado") return "prestamo_pagado";
   if (movimiento.tipo === "ingreso") {
     return movimiento.nota === "Ya puso" ? "ingreso_base" : "ingreso_extra";
   }
@@ -154,7 +161,7 @@ function getTipoMovimiento(movimiento) {
 
 function getMovimientoValor(m) {
   const tipo = getTipoMovimiento(m);
-  if (tipo === "no_recibido" || tipo === "ahorro") return -Math.abs(Number(m.monto || 0));
+  if (tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo") return -Math.abs(Number(m.monto || 0));
   return Math.abs(Number(m.monto || 0));
 }
 
@@ -330,18 +337,17 @@ function render() {
   $("dineroLibre").textContent = money(totals.dineroLibre);
   $("gastoDiario").textContent = totals.dias > 0 ? money(totals.gastoDiario) : money(totals.dineroLibre);
   $("ahorroTotal").textContent = money(state.ahorroTotal || 0);
+  if ($("prestadoPendiente")) $("prestadoPendiente").textContent = money(totals.prestadoPendiente || 0);
 
   $("estadoTexto").textContent = estado.titulo;
   $("estadoMensaje").textContent = `${estado.mensaje}${totals.dias ? ` Faltan ${totals.dias} día(s).` : ""}`;
 
   const mensajeAhorro = $("mensajeAhorro");
   if (mensajeAhorro) {
-    if (totals.dias === 0 && totals.dineroLibre > 0) {
-      mensajeAhorro.textContent = `Hoy toca corte. Puedes mandar ${money(totals.dineroLibre)} a La Marranita.`;
-    } else if (totals.dineroLibre > 0) {
-      mensajeAhorro.textContent = `Si hoy cerraras el ciclo, podrías guardar ${money(totals.dineroLibre)}.`;
+    if (totals.dineroLibre > 0) {
+      mensajeAhorro.textContent = `Tú decides cuánto mandar al cochinito. Libre tienes ${money(totals.dineroLibre)}.`;
     } else {
-      mensajeAhorro.textContent = "Todavía no hay sobrante para guardar. Primero hay que llegar vivos al corte.";
+      mensajeAhorro.textContent = "Ahorita no hay lana libre para guardar. Primero hay que respirar.";
     }
   }
 
@@ -377,9 +383,15 @@ function render() {
 
   $("listaMovimientosLana").innerHTML = state.movimientosLana.slice().reverse().slice(0, 8).map((m) => {
     const tipo = getTipoMovimiento(m);
-    const esDescuento = tipo === "no_recibido" || tipo === "ahorro";
+    const esDescuento = tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo";
     const signo = esDescuento ? "-" : "+";
-    const etiqueta = tipo === "ingreso_base" ? "Ya puso" : tipo === "ingreso_extra" ? "Extra" : tipo === "ahorro" ? "A La Marranita" : "No cayó";
+    const etiqueta =
+      tipo === "ingreso_base" ? "Ya puso" :
+      tipo === "ingreso_extra" ? "Extra" :
+      tipo === "ahorro" ? "A La Marranita" :
+      tipo === "prestamo" ? "Prestaste" :
+      tipo === "prestamo_pagado" ? "Te pagaron" :
+      "No cayó";
 
     return `
       <li>
@@ -388,6 +400,35 @@ function render() {
       </li>
     `;
   }).join("");
+
+  const prestamosPendientes = state.prestamos.filter((p) => p.estado !== "pagado");
+  const listaPrestamos = $("listaPrestamos");
+  if (listaPrestamos) {
+    listaPrestamos.innerHTML = prestamosPendientes.length
+      ? prestamosPendientes.slice().reverse().map((p) => `
+        <li class="loan-row">
+          <span>${p.persona || "Alguien"} · ${p.fecha || getFechaHoy()}${p.nota ? ` · ${p.nota}` : ""}</span>
+          <div class="loan-actions">
+            <strong>${money(p.monto)}</strong>
+            <button class="mini-text" onclick="marcarPrestamoPagado('${p.id}')">Me pagó</button>
+          </div>
+        </li>
+      `).join("")
+      : `<li><span>Nadie te debe lana registrada.</span><strong>${money(0)}</strong></li>`;
+  }
+
+  const prestamosPagados = state.prestamos.filter((p) => p.estado === "pagado");
+  const listaPrestamosPagados = $("listaPrestamosPagados");
+  if (listaPrestamosPagados) {
+    listaPrestamosPagados.innerHTML = prestamosPagados.length
+      ? prestamosPagados.slice().reverse().slice(0, 4).map((p) => `
+        <li>
+          <span>${p.persona || "Alguien"} · pagó ${p.fechaPago || p.fecha}</span>
+          <strong>+${money(p.monto)}</strong>
+        </li>
+      `).join("")
+      : "";
+  }
 
   $("listaPagos").innerHTML = state.pagos.map((p, index) => `
     <li>
@@ -409,6 +450,24 @@ function render() {
 
 window.borrarPago = function(index) {
   state.pagos.splice(index, 1);
+  saveState();
+};
+
+window.marcarPrestamoPagado = function(id) {
+  const prestamo = state.prestamos.find((p) => p.id === id);
+  if (!prestamo || prestamo.estado === "pagado") return;
+
+  prestamo.estado = "pagado";
+  prestamo.fechaPago = getFechaHoy();
+  state.ingresoActual = Number(state.ingresoActual || 0) + Number(prestamo.monto || 0);
+
+  state.movimientosLana.push({
+    tipo: "prestamo_pagado",
+    monto: Number(prestamo.monto || 0),
+    nota: `${prestamo.persona || "Alguien"} te pagó`,
+    fecha: getFechaHoy()
+  });
+
   saveState();
 };
 
@@ -488,14 +547,18 @@ on("guardarNoRecibido", "click", () => {
 
 on("guardarSobrante", "click", () => {
   const totals = getTotals();
-  const monto = Math.floor(Number(totals.dineroLibre || 0));
+  const monto = Number($("montoAhorro").value);
+  const nota = $("notaAhorro").value.trim();
 
   if (!monto || monto <= 0) {
-    alert("Todavía no hay sobrante para guardar.");
+    alert("Pon cuánto vas a guardar en La Marranita.");
     return;
   }
 
-  if (!confirm(`¿Mandamos ${money(monto)} a La Marranita?`)) return;
+  if (monto > totals.dineroLibre) {
+    alert(`Esa lana todavía no está libre. Libre tienes ${money(totals.dineroLibre)}.`);
+    return;
+  }
 
   state.ahorroTotal = Number(state.ahorroTotal || 0) + monto;
   state.ingresoActual = Number(state.ingresoActual || 0) - monto;
@@ -503,12 +566,62 @@ on("guardarSobrante", "click", () => {
   const ahorro = {
     tipo: "ahorro",
     monto,
-    nota: "Sobrante del ciclo",
+    nota: nota || "Guardado en La Marranita",
     fecha: getFechaHoy()
   };
 
   state.ahorros.push(ahorro);
   state.movimientosLana.push(ahorro);
+  $("montoAhorro").value = "";
+  $("notaAhorro").value = "";
+  saveState();
+});
+
+
+on("guardarPrestamo", "click", () => {
+  const persona = $("personaPrestamo").value.trim();
+  const monto = Number($("montoPrestamo").value);
+  const fecha = $("fechaPrestamo").value || getFechaHoy();
+  const nota = $("notaPrestamo").value.trim();
+  const totals = getTotals();
+
+  if (!persona) {
+    alert("Pon a quién le prestaste.");
+    return;
+  }
+
+  if (!monto || monto <= 0) {
+    alert("Pon cuánto le prestaste.");
+    return;
+  }
+
+  if (monto > totals.dineroLibre) {
+    const sigue = confirm(`Libre tienes ${money(totals.dineroLibre)}. Si prestas más, te puedes apretar. ¿Aun así lo apunto?`);
+    if (!sigue) return;
+  }
+
+  const prestamo = {
+    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    persona,
+    monto,
+    fecha,
+    nota: nota || "Préstamo",
+    estado: "pendiente"
+  };
+
+  state.prestamos.push(prestamo);
+  state.ingresoActual = Number(state.ingresoActual || 0) - monto;
+  state.movimientosLana.push({
+    tipo: "prestamo",
+    monto,
+    nota: `${persona} · ${nota || "Préstamo"}`,
+    fecha
+  });
+
+  $("personaPrestamo").value = "";
+  $("montoPrestamo").value = "";
+  $("fechaPrestamo").value = "";
+  $("notaPrestamo").value = "";
   saveState();
 });
 
@@ -575,7 +688,7 @@ on("exportarCSV", "click", () => {
     ["tipo", "concepto_nota", "monto", "fecha"],
     ...state.movimientosLana.map(m => {
       const tipo = getTipoMovimiento(m);
-      const monto = tipo === "no_recibido" || tipo === "ahorro" ? -Math.abs(Number(m.monto)) : Number(m.monto);
+      const monto = tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo" ? -Math.abs(Number(m.monto)) : Number(m.monto);
       return [tipo, m.nota, monto, m.fecha];
     }),
     ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha]),
