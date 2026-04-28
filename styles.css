@@ -297,3 +297,44 @@ button:active {
     padding: 17px;
   }
 }
+
+.piggy-card {
+  background: linear-gradient(180deg, rgba(255, 254, 253, .96), rgba(255, 245, 239, .96));
+}
+
+.piggy-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.piggy-head h3 {
+  margin-bottom: 0;
+}
+
+.piggy-total {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  min-height: 170px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 250, 246, .7);
+}
+
+.label-hint {
+  color: var(--soft);
+  font-weight: 700;
+}

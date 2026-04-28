@@ -41,10 +41,35 @@
       </div>
     </section>
 
+    <section class="card compact-card piggy-card">
+      <div class="piggy-head">
+        <div>
+          <p class="label">La Marranita</p>
+          <h3>Lo que se salvó</h3>
+        </div>
+        <strong id="ahorroTotal" class="piggy-total">$0</strong>
+      </div>
+      <p id="mensajeAhorro" class="helper">Cuando llegue el día de pago, guarda lo que sobró para ver cuánto vas juntando.</p>
+      <button id="guardarSobrante" class="secondary">Guardar lo que sobró</button>
+      <ul id="listaAhorros" class="list"></ul>
+    </section>
+
     <section class="card compact-card">
       <h3>Extras que cayeron</h3>
       <p class="helper">Aquí se separa la lana que no era tu sueldo base.</p>
       <ul id="listaExtras" class="list"></ul>
+    </section>
+
+    <section class="card compact-card">
+      <h3>Cómo se mueve tu lana</h3>
+      <p class="helper">Una línea sencilla para ver si tu saldo sube, baja o se está aguantando.</p>
+      <canvas id="graficaSaldo" class="chart" height="170"></canvas>
+    </section>
+
+    <section class="card compact-card">
+      <h3>En qué se está yendo</h3>
+      <p class="helper">Barras por tipo de gasto. Entre más larga, más se está comiendo tu lana.</p>
+      <canvas id="graficaGastos" class="chart" height="190"></canvas>
     </section>
 
     <section class="card">
@@ -111,7 +136,7 @@
         <label>¿Cuánto salió?
           <input id="montoGasto" type="number" inputmode="decimal" placeholder="Ej. 85">
         </label>
-        <label>¿En qué se fue?
+        <label>¿En qué se fue? <span class="label-hint">tipo de gasto</span>
           <input id="notaGasto" type="text" placeholder="Ej. comida, pasaje, gusto">
         </label>
         <button id="guardarGasto">Apuntar gasto</button>
