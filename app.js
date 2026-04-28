@@ -448,7 +448,6 @@ function render() {
     `).join("")
     : `<li><span>Todavía no apuntas gastos.</span><strong>${money(0)}</strong></li>`;
 
-  renderCharts();
 }
 
 window.borrarPago = function(index) {
