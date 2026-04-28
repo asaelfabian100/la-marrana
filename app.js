@@ -678,6 +678,90 @@ on("evaluarCompra", "click", () => {
     `Eso te deja en ${money(nuevoDiario)} diarios. ${estado.titulo}: ${estado.mensaje}`;
 });
 
+function fechaBonita(dateString) {
+  if (!dateString) return "sin fecha";
+  const [year, month, day] = String(dateString).split("-");
+  if (!year || !month || !day) return dateString;
+  return `${day}/${month}/${year}`;
+}
+
+function sumMovimientosByTipo(tipoBuscado) {
+  return state.movimientosLana
+    .filter((m) => getTipoMovimiento(m) === tipoBuscado)
+    .reduce((sum, item) => sum + Number(item.monto || 0), 0);
+}
+
+function construirResumenWhatsApp() {
+  const totals = getTotals();
+  const estado = getEstado(totals.dineroLibre, totals.gastoDiario, totals.dias);
+  const ingresoBase = sumMovimientosByTipo("ingreso_base");
+  const ingresoExtra = sumMovimientosByTipo("ingreso_extra");
+  const noRecibido = sumMovimientosByTipo("no_recibido");
+  const prestamosPendientes = state.prestamos.filter((p) => p.status !== "pagado");
+  const fechaCorte = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "2-digit", day: "2-digit" });
+
+  const pagosTexto = state.pagos.length
+    ? state.pagos.map((p) => `• ${p.concepto || "Pago"}: ${money(p.monto)}`).join("\n")
+    : "• Sin pagos apartados.";
+
+  const gastosTexto = state.gastos.length
+    ? state.gastos.slice().reverse().slice(0, 8).map((g) => `• ${g.nota || "Gasto"}: ${money(g.monto)} · ${fechaBonita(g.fecha)}`).join("\n")
+    : "• Sin gastos apuntados.";
+
+  const ahorrosTexto = state.ahorros.length
+    ? state.ahorros.slice().reverse().slice(0, 6).map((a) => `• ${a.nota || "Guardadito"}: ${money(a.monto)} · ${fechaBonita(a.fecha)}`).join("\n")
+    : "• Todavía no hay lana en La Marranita.";
+
+  const prestamosTexto = prestamosPendientes.length
+    ? prestamosPendientes.slice().reverse().map((p) => {
+        const promesa = p.fechaPromesa ? ` · dijo que paga: ${fechaBonita(p.fechaPromesa)}` : "";
+        return `• ${p.persona || "Alguien"}: ${money(p.monto)} · ${p.nota || "Préstamo"}${promesa}`;
+      }).join("\n")
+    : "• No hay préstamos pendientes.";
+
+  return [
+    "*La Marrana — Estado de cuentas*",
+    `Corte: ${fechaCorte}`,
+    "",
+    `*Estado:* ${estado.titulo}`,
+    `${estado.mensaje}${totals.dias ? ` Faltan ${totals.dias} día(s) para que vuelva a poner.` : ""}`,
+    "",
+    "*Resumen rápido*",
+    `• Traes ahorita: ${money(totals.dineroTotal)}`,
+    `• Ya tiene dueño: ${money(totals.dineroDueno)}`,
+    `• Te queda libre: ${money(totals.dineroLibre)}`,
+    `• Para usar al día: ${money(totals.gastoDiario)}`,
+    `• En La Marranita: ${money(state.ahorroTotal || 0)}`,
+    `• Lana prestada pendiente: ${money(totals.prestamosPendientes)}`,
+    "",
+    "*Entradas de lana*",
+    `• Ya puso / sueldo base: ${money(ingresoBase)}`,
+    `• Lanita fuera del plan: ${money(ingresoExtra)}`,
+    `• Me equivoqué, no cayó: -${money(noRecibido)}`,
+    "",
+    "*Pagos que ya tienen dueño*",
+    pagosTexto,
+    "",
+    "*Gastos apuntados*",
+    gastosTexto,
+    "",
+    "*La Marranita*",
+    ahorrosTexto,
+    "",
+    "*Lana que anda fuera*",
+    prestamosTexto,
+    "",
+    "Resumen enviado desde La Marrana."
+  ].join("\n");
+}
+
+on("compartirWhatsApp", "click", () => {
+  const texto = construirResumenWhatsApp();
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  const opened = window.open(url, "_blank");
+  if (!opened) window.location.href = url;
+});
+
 on("exportarCSV", "click", () => {
   const rows = [
     ["tipo", "concepto_nota", "monto", "fecha", "persona", "fecha_promesa", "status"],
@@ -732,9 +816,5 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
-window.addEventListener("resize", renderCharts);
-document.querySelectorAll("details").forEach((section) => {
-  section.addEventListener("toggle", renderCharts);
-});
 
 render();
