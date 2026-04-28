@@ -16,6 +16,23 @@
       <p class="subtitle">Dime qué lana entró, qué se fue y qué ya apartaste. Te digo si llegas.</p>
     </header>
 
+    <details class="card section-toggle">
+      <summary>
+        <span>
+          <small>No te aloques</small>
+          <strong>Checar compra</strong>
+        </span>
+      </summary>
+      <p class="helper">Antes de comprar, checa si todavía llegas.</p>
+      <div class="form">
+        <label>¿Cuánto cuesta?
+          <input id="montoCompra" type="number" inputmode="decimal" placeholder="Ej. 600">
+        </label>
+        <button id="evaluarCompra">Checar compra</button>
+      </div>
+      <p id="resultadoCompra" class="result"></p>
+    </details>
+
     <section class="card status-card">
       <p class="label">Estado</p>
       <h2 id="estadoTexto">Vamos a repartir la lana</h2>
@@ -40,72 +57,6 @@
         <strong id="gastoDiario">$0</strong>
       </div>
     </section>
-
-    <details class="card section-toggle piggy-card" open>
-      <summary>
-        <span>
-          <small>La Marranita</small>
-          <strong>Lo que ya guardaste</strong>
-        </span>
-        <b id="ahorroTotal">$0</b>
-      </summary>
-      <p id="mensajeAhorro" class="helper">Aquí metes la lana que ya no está libre: la mandaste al cochinito y no se toca.</p>
-      <div class="form">
-        <label>¿Cuánto vas a meter al cochinito?
-          <input id="montoAhorro" type="number" inputmode="decimal" placeholder="Ej. 300">
-        </label>
-        <label>¿Para qué la vas a guardar?
-          <select id="conceptoAhorro">
-            <option value="otro" selected>Otro / escribir yo</option>
-            <option>Emergencia</option>
-            <option>Guardadito</option>
-            <option>Viaje</option>
-            <option>Inversión</option>
-            <option>Meta personal</option>
-            <option>Algo para la casa</option>
-          </select>
-          <input id="otroAhorro" type="text" placeholder="Ej. fondo de emergencia">
-        </label>
-        <button id="guardarAhorro" class="secondary">Meter al cochinito</button>
-      </div>
-      <ul id="listaAhorros" class="list"></ul>
-    </details>
-
-    <details class="card section-toggle" open>
-      <summary>
-        <span>
-          <small>Lana que anda fuera</small>
-          <strong>Préstamos</strong>
-        </span>
-        <b id="prestamosTotal">$0</b>
-      </summary>
-      <p class="helper">Para que no se te pierda a quién le prestaste, cuánto fue y cuándo quedó.</p>
-      <div class="form">
-        <label>¿Cuánto prestaste?
-          <input id="montoPrestamo" type="number" inputmode="decimal" placeholder="Ej. 500">
-        </label>
-        <label>¿A quién le prestaste?
-          <input id="personaPrestamo" type="text" placeholder="Ej. Luis, Fer, mamá">
-        </label>
-        <label>¿Por qué salió esa lana?
-          <select id="conceptoPrestamo">
-            <option value="otro" selected>Otro / escribir yo</option>
-            <option>Emergencia</option>
-            <option>Comida</option>
-            <option>Transporte</option>
-            <option>Completar pago</option>
-            <option>Favor rápido</option>
-            <option>Sin explicación</option>
-          </select>
-          <input id="otroPrestamo" type="text" placeholder="Ej. le faltó para la renta">
-        </label>
-        <label>¿Cuándo te dijo que paga? <span class="label-hint">opcional</span>
-          <input id="fechaPrestamo" type="date">
-        </label>
-        <button id="guardarPrestamo">Apuntar préstamo</button>
-      </div>
-      <ul id="listaPrestamos" class="list"></ul>
-    </details>
 
     <details class="card section-toggle" open>
       <summary>
@@ -245,21 +196,70 @@
       <ul id="listaGastos" class="list"></ul>
     </details>
 
-    <details class="card section-toggle">
+    <details class="card section-toggle piggy-card" open>
       <summary>
         <span>
-          <small>No te aloques</small>
-          <strong>Checar compra</strong>
+          <small>La Marranita</small>
+          <strong>Lo que ya guardaste</strong>
         </span>
+        <b id="ahorroTotal">$0</b>
       </summary>
-      <p class="helper">Antes de comprar, checa si todavía llegas.</p>
+      <p id="mensajeAhorro" class="helper">Aquí metes la lana que ya no está libre: la mandaste al cochinito y no se toca.</p>
       <div class="form">
-        <label>¿Cuánto cuesta?
-          <input id="montoCompra" type="number" inputmode="decimal" placeholder="Ej. 600">
+        <label>¿Cuánto vas a meter al cochinito?
+          <input id="montoAhorro" type="number" inputmode="decimal" placeholder="Ej. 300">
         </label>
-        <button id="evaluarCompra">Checar compra</button>
+        <label>¿Para qué la vas a guardar?
+          <select id="conceptoAhorro">
+            <option value="otro" selected>Otro / escribir yo</option>
+            <option>Emergencia</option>
+            <option>Guardadito</option>
+            <option>Viaje</option>
+            <option>Inversión</option>
+            <option>Meta personal</option>
+            <option>Algo para la casa</option>
+          </select>
+          <input id="otroAhorro" type="text" placeholder="Ej. fondo de emergencia">
+        </label>
+        <button id="guardarAhorro" class="secondary">Meter al cochinito</button>
       </div>
-      <p id="resultadoCompra" class="result"></p>
+      <ul id="listaAhorros" class="list"></ul>
+    </details>
+
+    <details class="card section-toggle" open>
+      <summary>
+        <span>
+          <small>Lana que anda fuera</small>
+          <strong>Préstamos</strong>
+        </span>
+        <b id="prestamosTotal">$0</b>
+      </summary>
+      <p class="helper">Para que no se te pierda a quién le prestaste, cuánto fue y cuándo quedó.</p>
+      <div class="form">
+        <label>¿Cuánto prestaste?
+          <input id="montoPrestamo" type="number" inputmode="decimal" placeholder="Ej. 500">
+        </label>
+        <label>¿A quién le prestaste?
+          <input id="personaPrestamo" type="text" placeholder="Ej. Luis, Fer, mamá">
+        </label>
+        <label>¿Por qué salió esa lana?
+          <select id="conceptoPrestamo">
+            <option value="otro" selected>Otro / escribir yo</option>
+            <option>Emergencia</option>
+            <option>Comida</option>
+            <option>Transporte</option>
+            <option>Completar pago</option>
+            <option>Favor rápido</option>
+            <option>Sin explicación</option>
+          </select>
+          <input id="otroPrestamo" type="text" placeholder="Ej. le faltó para la renta">
+        </label>
+        <label>¿Cuándo te dijo que paga? <span class="label-hint">opcional</span>
+          <input id="fechaPrestamo" type="date">
+        </label>
+        <button id="guardarPrestamo">Apuntar préstamo</button>
+      </div>
+      <ul id="listaPrestamos" class="list"></ul>
     </details>
 
     <details class="card section-toggle">

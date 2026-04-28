@@ -387,23 +387,100 @@ select + input {
   display: none;
 }
 
-.section-toggle > summary::after {
-  content: "⌄";
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+.pig-toggle {
+  position: relative;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: var(--brand-soft);
+  display: block;
+  background: linear-gradient(180deg, #fff4ed 0%, var(--brand-soft) 100%);
+  border: 1px solid rgba(143, 52, 36, .18);
+  box-shadow: inset 0 -2px 0 rgba(143, 52, 36, .08), 0 4px 10px rgba(92, 32, 23, .07);
+  transition: background .16s ease, box-shadow .16s ease;
+}
+
+.pig-ear {
+  position: absolute;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: #fff4ed;
+  border: 1px solid rgba(143, 52, 36, .18);
+  transform: rotate(45deg);
+  border-radius: 4px 2px 4px 2px;
+  z-index: -1;
+}
+
+.pig-ear-left { left: 7px; }
+.pig-ear-right { right: 7px; }
+
+.pig-eye {
+  position: absolute;
+  top: 12px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--brand-dark);
+  transition: width .14s ease, height .14s ease, top .14s ease;
+}
+
+.pig-eye-left { left: 12px; }
+.pig-eye-right { right: 12px; }
+
+.pig-snout {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 16px;
+  height: 12px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: #fffaf6;
+  border: 1px solid rgba(143, 52, 36, .22);
+}
+
+.pig-snout::before,
+.pig-snout::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  width: 2px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--brand-dark);
+  opacity: .78;
+}
+
+.pig-snout::before { left: 5px; }
+.pig-snout::after { right: 5px; }
+
+.pig-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
   color: var(--brand-dark);
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1;
   transition: transform .16s ease;
 }
 
-.section-toggle[open] > summary::after {
-  transform: rotate(180deg);
+.section-toggle:not([open]) .pig-eye {
+  top: 13px;
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+}
+
+.section-toggle[open] .pig-toggle {
+  background: linear-gradient(180deg, #fffaf6 0%, #f7dfd4 100%);
+  box-shadow: inset 0 -2px 0 rgba(143, 52, 36, .07), 0 6px 12px rgba(92, 32, 23, .08);
+}
+
+.section-toggle[open] .pig-arrow {
+  transform: translateX(-50%) rotate(180deg);
 }
 
 .section-toggle > summary span {

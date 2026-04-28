@@ -707,6 +707,28 @@ on("limpiarTodo", "click", () => {
   location.reload();
 });
 
+
+function setupPiggyToggles() {
+  document.querySelectorAll(".section-toggle > summary").forEach((summary) => {
+    if (summary.querySelector(".pig-toggle")) return;
+
+    const pig = document.createElement("span");
+    pig.className = "pig-toggle";
+    pig.setAttribute("aria-hidden", "true");
+    pig.innerHTML = `
+      <span class="pig-ear pig-ear-left"></span>
+      <span class="pig-ear pig-ear-right"></span>
+      <span class="pig-eye pig-eye-left"></span>
+      <span class="pig-eye pig-eye-right"></span>
+      <span class="pig-snout"></span>
+      <span class="pig-arrow">⌄</span>
+    `;
+    summary.appendChild(pig);
+  });
+}
+
+setupPiggyToggles();
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
