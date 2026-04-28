@@ -3,6 +3,10 @@ const STORAGE_KEY = "la_marrana_mvp_v1";
 const state = loadState();
 
 const $ = (id) => document.getElementById(id);
+const on = (id, event, handler) => {
+  const element = $(id);
+  if (element) element.addEventListener(event, handler);
+};
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -57,6 +61,10 @@ function daysUntil(dateString) {
   const target = new Date(dateString + "T00:00:00");
   const diff = target - todayStart();
   return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+}
+
+function getFechaHoy() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function getTotals() {
@@ -126,6 +134,16 @@ function getEstado(dineroLibre, gastoDiario, dias) {
   };
 }
 
+function getTipoMovimiento(movimiento) {
+  if (movimiento.tipo === "ingreso_extra") return "ingreso_extra";
+  if (movimiento.tipo === "ingreso_base") return "ingreso_base";
+  if (movimiento.tipo === "no_recibido") return "no_recibido";
+  if (movimiento.tipo === "ingreso") {
+    return movimiento.nota === "Ya puso" ? "ingreso_base" : "ingreso_extra";
+  }
+  return movimiento.tipo || "movimiento";
+}
+
 function render() {
   const totals = getTotals();
   const estado = getEstado(totals.dineroLibre, totals.gastoDiario, totals.dias);
@@ -143,9 +161,25 @@ function render() {
 
   $("proximaFecha").value = state.proximaFechaPago || "";
 
+  const extras = state.movimientosLana.filter((m) => getTipoMovimiento(m) === "ingreso_extra");
+  const listaExtras = $("listaExtras");
+  if (listaExtras) {
+    listaExtras.innerHTML = extras.length
+      ? extras.slice().reverse().slice(0, 6).map((m) => `
+        <li>
+          <span>${m.nota || "Extra"} · ${m.fecha}</span>
+          <strong>+${money(m.monto)}</strong>
+        </li>
+      `).join("")
+      : `<li><span>Todavía no ha caído extra.</span><strong>${money(0)}</strong></li>`;
+  }
+
   $("listaMovimientosLana").innerHTML = state.movimientosLana.slice().reverse().slice(0, 8).map((m) => {
-    const signo = m.tipo === "ingreso" ? "+" : "-";
-    const etiqueta = m.tipo === "ingreso" ? "Cayó lana" : "No recibido";
+    const tipo = getTipoMovimiento(m);
+    const esDescuento = tipo === "no_recibido";
+    const signo = esDescuento ? "-" : "+";
+    const etiqueta = tipo === "ingreso_base" ? "Ya puso" : tipo === "ingreso_extra" ? "Extra" : "No cayó";
+
     return `
       <li>
         <span>${etiqueta} · ${m.nota || "Sin nota"} · ${m.fecha}</span>
@@ -193,7 +227,7 @@ window.borrarPago = function(index) {
   saveState();
 };
 
-$("guardarIngreso").addEventListener("click", () => {
+on("guardarIngreso", "click", () => {
   const monto = Number($("montoIngreso").value);
   const fecha = $("proximaFecha").value;
 
@@ -211,22 +245,45 @@ $("guardarIngreso").addEventListener("click", () => {
   state.proximaFechaPago = fecha;
 
   state.movimientosLana.push({
-    tipo: "ingreso",
+    tipo: "ingreso_base",
     monto,
-    nota: "Ya puso",
-    fecha: new Date().toISOString().slice(0, 10)
+    nota: "Sueldo base",
+    fecha: getFechaHoy()
   });
 
   $("montoIngreso").value = "";
   saveState();
 });
 
-$("guardarNoRecibido").addEventListener("click", () => {
+on("guardarExtra", "click", () => {
+  const monto = Number($("montoExtra").value);
+  const nota = $("notaExtra").value.trim();
+
+  if (!monto || monto <= 0) {
+    alert("Pon cuánto te cayó de más.");
+    return;
+  }
+
+  state.ingresoActual = Number(state.ingresoActual || 0) + monto;
+
+  state.movimientosLana.push({
+    tipo: "ingreso_extra",
+    monto,
+    nota: nota || "Lanita extra",
+    fecha: getFechaHoy()
+  });
+
+  $("montoExtra").value = "";
+  $("notaExtra").value = "";
+  saveState();
+});
+
+on("guardarNoRecibido", "click", () => {
   const monto = Number($("montoNoRecibido").value);
   const nota = $("notaNoRecibido").value.trim();
 
   if (!monto || monto <= 0) {
-    alert("Pon cuánto no llegó.");
+    alert("Pon cuánto no cayó.");
     return;
   }
 
@@ -235,8 +292,8 @@ $("guardarNoRecibido").addEventListener("click", () => {
   state.movimientosLana.push({
     tipo: "no_recibido",
     monto,
-    nota: nota || "Esto no lo recibí",
-    fecha: new Date().toISOString().slice(0, 10)
+    nota: nota || "Esto no cayó",
+    fecha: getFechaHoy()
   });
 
   $("montoNoRecibido").value = "";
@@ -244,7 +301,7 @@ $("guardarNoRecibido").addEventListener("click", () => {
   saveState();
 });
 
-$("guardarPago").addEventListener("click", () => {
+on("guardarPago", "click", () => {
   const concepto = $("conceptoPago").value.trim();
   const monto = Number($("montoPago").value);
 
@@ -256,7 +313,7 @@ $("guardarPago").addEventListener("click", () => {
   state.pagos.push({
     concepto: concepto || "Pago",
     monto,
-    fecha: new Date().toISOString().slice(0, 10)
+    fecha: getFechaHoy()
   });
 
   $("conceptoPago").value = "";
@@ -264,7 +321,7 @@ $("guardarPago").addEventListener("click", () => {
   saveState();
 });
 
-$("guardarGasto").addEventListener("click", () => {
+on("guardarGasto", "click", () => {
   const monto = Number($("montoGasto").value);
   const nota = $("notaGasto").value.trim();
 
@@ -276,7 +333,7 @@ $("guardarGasto").addEventListener("click", () => {
   state.gastos.push({
     monto,
     nota: nota || "Gasto",
-    fecha: new Date().toISOString().slice(0, 10)
+    fecha: getFechaHoy()
   });
 
   $("montoGasto").value = "";
@@ -284,7 +341,7 @@ $("guardarGasto").addEventListener("click", () => {
   saveState();
 });
 
-$("evaluarCompra").addEventListener("click", () => {
+on("evaluarCompra", "click", () => {
   const compra = Number($("montoCompra").value);
   const totals = getTotals();
 
@@ -302,15 +359,14 @@ $("evaluarCompra").addEventListener("click", () => {
     `Eso te deja en ${money(nuevoDiario)} diarios. ${estado.titulo}: ${estado.mensaje}`;
 });
 
-$("exportarCSV").addEventListener("click", () => {
+on("exportarCSV", "click", () => {
   const rows = [
     ["tipo", "concepto_nota", "monto", "fecha"],
-    ...state.movimientosLana.map(m => [
-      m.tipo === "ingreso" ? "ingreso" : "no_recibido",
-      m.nota,
-      m.tipo === "ingreso" ? m.monto : -Math.abs(Number(m.monto)),
-      m.fecha
-    ]),
+    ...state.movimientosLana.map(m => {
+      const tipo = getTipoMovimiento(m);
+      const monto = tipo === "no_recibido" ? -Math.abs(Number(m.monto)) : Number(m.monto);
+      return [tipo, m.nota, monto, m.fecha];
+    }),
     ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha]),
     ...state.gastos.map(g => ["gasto", g.nota, g.monto, g.fecha])
   ];
@@ -320,12 +376,12 @@ $("exportarCSV").addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `la_marrana_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `la_marrana_${getFechaHoy()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 });
 
-$("limpiarTodo").addEventListener("click", () => {
+on("limpiarTodo", "click", () => {
   if (!confirm("¿Seguro que quieres borrar todo?")) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
