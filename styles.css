@@ -600,3 +600,85 @@ select + input {
 .section-toggle:not([open]) .pig-eye::after {
   display: none;
 }
+
+
+/* v15: borrado seguro, firma y último movimiento */
+.delete-zone {
+  margin-top: 10px;
+}
+
+.delete-confirm {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(163, 31, 31, .22);
+  border-radius: 18px;
+  background: #fff5f3;
+}
+
+.delete-confirm p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.delete-confirm strong {
+  color: var(--red);
+}
+
+.ghost-button {
+  background: #fffefd;
+  color: var(--brand-dark);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  margin-bottom: 10px;
+}
+
+.hold-delete {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hold-delete .hold-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: rgba(255, 255, 255, .22);
+  z-index: -1;
+}
+
+.hold-delete.holding .hold-fill {
+  animation: holdToDelete 3s linear forwards;
+}
+
+.hold-label {
+  position: relative;
+  z-index: 1;
+}
+
+.hold-helper {
+  margin: 9px 0 0 !important;
+  font-size: 13px;
+  color: var(--soft) !important;
+}
+
+@keyframes holdToDelete {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.app-footer {
+  padding: 18px 6px 8px;
+  text-align: center;
+  color: var(--soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.app-footer p {
+  margin: 3px 0;
+}
+
+.app-footer strong {
+  color: var(--brand-dark);
+}

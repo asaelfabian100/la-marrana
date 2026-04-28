@@ -448,6 +448,9 @@ function render() {
     `).join("")
     : `<li><span>Todavía no apuntas gastos.</span><strong>${money(0)}</strong></li>`;
 
+  const ultimaMovimientoFecha = $("ultimaMovimientoFecha");
+  if (ultimaMovimientoFecha) ultimaMovimientoFecha.textContent = getUltimoMovimientoFecha();
+
 }
 
 window.borrarPago = function(index) {
@@ -685,6 +688,20 @@ function fechaBonita(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+function getUltimoMovimientoFecha() {
+  const fechas = [
+    ...state.movimientosLana.map((m) => m.fecha),
+    ...state.pagos.map((p) => p.fecha),
+    ...state.gastos.map((g) => g.fecha),
+    ...state.ahorros.map((a) => a.fecha),
+    ...state.prestamos.map((p) => p.fecha),
+    ...state.prestamos.map((p) => p.fechaPago)
+  ].filter(Boolean);
+
+  if (!fechas.length) return "Todavía sin movimientos";
+  return fechaBonita(fechas.sort().at(-1));
+}
+
 function sumMovimientosByTipo(tipoBuscado) {
   return state.movimientosLana
     .filter((m) => getTipoMovimiento(m) === tipoBuscado)
@@ -751,7 +768,8 @@ function construirResumenWhatsApp() {
     "*Lana que anda fuera*",
     prestamosTexto,
     "",
-    "Resumen enviado desde La Marrana."
+    "Resumen enviado desde La Marrana.",
+    "Por Wolf 🐺"
   ].join("\n");
 }
 
@@ -785,11 +803,55 @@ on("exportarCSV", "click", () => {
   URL.revokeObjectURL(url);
 });
 
-on("limpiarTodo", "click", () => {
-  if (!confirm("¿Seguro que quieres borrar todo?")) return;
+function ejecutarBorradoTotal() {
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
-});
+}
+
+function setupBorradoSeguro() {
+  const botonInicial = $("limpiarTodo");
+  const panel = $("confirmarBorradoPanel");
+  const cancelar = $("cancelarBorrado");
+  const confirmar = $("confirmarBorradoHold");
+  if (!botonInicial || !panel || !cancelar || !confirmar) return;
+
+  let timer = null;
+  let listo = false;
+
+  const resetHold = () => {
+    clearTimeout(timer);
+    timer = null;
+    if (!listo) confirmar.classList.remove("holding");
+  };
+
+  const startHold = (event) => {
+    event.preventDefault();
+    listo = false;
+    confirmar.classList.add("holding");
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      listo = true;
+      confirmar.classList.remove("holding");
+      ejecutarBorradoTotal();
+    }, 3000);
+  };
+
+  botonInicial.addEventListener("click", () => {
+    panel.hidden = false;
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  cancelar.addEventListener("click", () => {
+    resetHold();
+    panel.hidden = true;
+  });
+
+  confirmar.addEventListener("click", (event) => event.preventDefault());
+  confirmar.addEventListener("pointerdown", startHold);
+  confirmar.addEventListener("pointerup", resetHold);
+  confirmar.addEventListener("pointercancel", resetHold);
+  confirmar.addEventListener("pointerleave", resetHold);
+}
 
 
 function setupPiggyToggles() {
@@ -811,6 +873,7 @@ function setupPiggyToggles() {
 }
 
 setupPiggyToggles();
+setupBorradoSeguro();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");

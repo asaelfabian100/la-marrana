@@ -270,10 +270,28 @@
         </span>
       </summary>
       <p class="helper">Baja tus movimientos en CSV. Sin nube, sin cuenta, sin vueltas.</p>
-      <button id="exportarCSV" class="secondary">Exportar CSV</button>
       <button id="compartirWhatsApp" class="whatsapp">Mandar resumen por WhatsApp</button>
-      <button id="limpiarTodo" class="danger">Borrar todo</button>
+      <button id="exportarCSV" class="secondary">Exportar CSV</button>
+
+      <div class="delete-zone">
+        <button id="limpiarTodo" class="danger">Limpiar toda la app</button>
+        <div id="confirmarBorradoPanel" class="delete-confirm" hidden>
+          <p><strong>¿Seguro, seguro?</strong><br>Si limpias la app se borra toda la lana, pagos, gastos, préstamos y La Marranita guardada en este teléfono.</p>
+          <button id="cancelarBorrado" class="ghost-button">Mejor no, déjalo así</button>
+          <button id="confirmarBorradoHold" class="danger hold-delete">
+            <span class="hold-fill"></span>
+            <span class="hold-label">Mantén presionado 3 segundos para borrar</span>
+          </button>
+          <p class="hold-helper">Si te arrepientes, suelta el botón y no pasa nada.</p>
+        </div>
+      </div>
     </details>
+
+    <footer class="app-footer">
+      <p><strong>La Marrana</strong> · v15</p>
+      <p>Último movimiento: <span id="ultimaMovimientoFecha">Todavía sin movimientos</span></p>
+      <p>Por Wolf 🐺</p>
+    </footer>
   </main>
 
   <script src="app.js"></script>
