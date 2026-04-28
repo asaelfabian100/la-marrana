@@ -11,9 +11,15 @@
 <body>
   <main class="app">
     <header class="hero">
-      <p class="eyebrow">La Marrana</p>
-      <h1>Aguanta hasta que ponga.</h1>
-      <p class="subtitle">Dime qué lana entró, qué se fue y qué ya apartaste. Te digo si llegas.</p>
+      <div class="hero-copy">
+        <p class="eyebrow">La Marrana</p>
+        <h1>Aguanta hasta que ponga.</h1>
+        <p class="subtitle">Dime qué lana entró, qué se fue y qué ya apartaste. Te digo si llegas.</p>
+      </div>
+      <div class="last-move-badge" aria-live="polite">
+        <span>Último movimiento</span>
+        <strong id="ultimaMovimientoFecha">Todavía sin movimientos</strong>
+      </div>
     </header>
 
     <details class="card section-toggle">
@@ -288,9 +294,8 @@
     </details>
 
     <footer class="app-footer">
-      <p><strong>La Marrana</strong> · v15</p>
-      <p>Último movimiento: <span id="ultimaMovimientoFecha">Todavía sin movimientos</span></p>
-      <p>Por Wolf 🐺</p>
+      <p><strong>La Marrana</strong> · v16</p>
+      <p>Hecho por Wolf 🐺</p>
     </footer>
   </main>
 
