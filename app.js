@@ -76,18 +76,37 @@ function normalizarTexto(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function getConcepto(selectId, inputId, fallback) {
+  const select = $(selectId);
+  const input = $(inputId);
+  const selected = select ? select.value : "otro";
+  const openValue = input ? input.value.trim() : "";
+
+  if (selected === "otro") return openValue || fallback;
+  return selected || openValue || fallback;
+}
+
+function clearFields(ids) {
+  ids.forEach((id) => {
+    const element = $(id);
+    if (!element) return;
+    if (element.tagName === "SELECT") element.value = "otro";
+    else element.value = "";
+  });
+}
+
 function getTotals() {
   const totalGastos = state.gastos.reduce((sum, item) => sum + Number(item.monto), 0);
   const dineroTotal = Number(state.ingresoActual || 0) - totalGastos;
   const dineroDueno = state.pagos.reduce((sum, item) => sum + Number(item.monto), 0);
   const dineroLibre = dineroTotal - dineroDueno;
-  const prestadoPendiente = state.prestamos
-    .filter((item) => item.estado !== "pagado")
-    .reduce((sum, item) => sum + Number(item.monto || 0), 0);
   const dias = daysUntil(state.proximaFechaPago);
   const gastoDiario = dias > 0 ? dineroLibre / dias : dineroLibre;
+  const prestamosPendientes = state.prestamos
+    .filter((p) => p.status !== "pagado")
+    .reduce((sum, item) => sum + Number(item.monto || 0), 0);
 
-  return { totalGastos, dineroTotal, dineroDueno, dineroLibre, prestadoPendiente, dias, gastoDiario };
+  return { totalGastos, dineroTotal, dineroDueno, dineroLibre, dias, gastoDiario, prestamosPendientes };
 }
 
 function getEstado(dineroLibre, gastoDiario, dias) {
@@ -111,7 +130,7 @@ function getEstado(dineroLibre, gastoDiario, dias) {
     return {
       clase: "tranquilo",
       titulo: "Hoy pone la marrana",
-      mensaje: "Si sobró algo, mándalo a La Marranita antes de arrancar el nuevo ciclo."
+      mensaje: "Antes de arrancar otro ciclo, revisa qué guardas, qué debes y qué anda prestado."
     };
   }
 
@@ -161,7 +180,7 @@ function getTipoMovimiento(movimiento) {
 
 function getMovimientoValor(m) {
   const tipo = getTipoMovimiento(m);
-  if (tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo") return -Math.abs(Number(m.monto || 0));
+  if (["no_recibido", "ahorro", "prestamo"].includes(tipo)) return -Math.abs(Number(m.monto || 0));
   return Math.abs(Number(m.monto || 0));
 }
 
@@ -337,18 +356,16 @@ function render() {
   $("dineroLibre").textContent = money(totals.dineroLibre);
   $("gastoDiario").textContent = totals.dias > 0 ? money(totals.gastoDiario) : money(totals.dineroLibre);
   $("ahorroTotal").textContent = money(state.ahorroTotal || 0);
-  if ($("prestadoPendiente")) $("prestadoPendiente").textContent = money(totals.prestadoPendiente || 0);
+  $("prestamosTotal").textContent = money(totals.prestamosPendientes || 0);
 
   $("estadoTexto").textContent = estado.titulo;
   $("estadoMensaje").textContent = `${estado.mensaje}${totals.dias ? ` Faltan ${totals.dias} día(s).` : ""}`;
 
   const mensajeAhorro = $("mensajeAhorro");
   if (mensajeAhorro) {
-    if (totals.dineroLibre > 0) {
-      mensajeAhorro.textContent = `Tú decides cuánto mandar al cochinito. Libre tienes ${money(totals.dineroLibre)}.`;
-    } else {
-      mensajeAhorro.textContent = "Ahorita no hay lana libre para guardar. Primero hay que respirar.";
-    }
+    mensajeAhorro.textContent = totals.dineroLibre > 0
+      ? `Tienes ${money(totals.dineroLibre)} libre. Si quieres salvar una parte, métela aquí.`
+      : "Ahorita no hay lana libre. Primero hay que respirar.";
   }
 
   const statusCard = document.querySelector(".status-card");
@@ -357,41 +374,52 @@ function render() {
   $("proximaFecha").value = state.proximaFechaPago || "";
 
   const listaAhorros = $("listaAhorros");
-  if (listaAhorros) {
-    listaAhorros.innerHTML = state.ahorros.length
-      ? state.ahorros.slice().reverse().slice(0, 5).map((a) => `
-        <li>
-          <span>${a.nota || "Sobrante"} · ${a.fecha}</span>
-          <strong>+${money(a.monto)}</strong>
+  listaAhorros.innerHTML = state.ahorros.length
+    ? state.ahorros.slice().reverse().slice(0, 6).map((a) => `
+      <li>
+        <span>${a.nota || "Guardadito"} · ${a.fecha}</span>
+        <strong>+${money(a.monto)}</strong>
+      </li>
+    `).join("")
+    : `<li><span>La Marranita todavía está vacía.</span><strong>${money(0)}</strong></li>`;
+
+  const prestamosPendientes = state.prestamos.filter((p) => p.status !== "pagado");
+  $("listaPrestamos").innerHTML = prestamosPendientes.length
+    ? prestamosPendientes.slice().reverse().map((p) => {
+      const index = state.prestamos.indexOf(p);
+      const promesa = p.fechaPromesa ? ` · paga: ${p.fechaPromesa}` : "";
+      return `
+        <li class="stacked-item">
+          <span><strong>${p.persona || "Alguien"}</strong> · ${p.nota || "Préstamo"}${promesa}<br><small>${p.fecha}</small></span>
+          <span class="row-actions">
+            <strong>${money(p.monto)}</strong>
+            <button class="mini" onclick="marcarPrestamoPagado(${index})" aria-label="Marcar como pagado">✓</button>
+          </span>
         </li>
-      `).join("")
-      : `<li><span>La Marranita todavía está vacía.</span><strong>${money(0)}</strong></li>`;
-  }
+      `;
+    }).join("")
+    : `<li><span>No tienes lana prestada pendiente.</span><strong>${money(0)}</strong></li>`;
 
   const extras = state.movimientosLana.filter((m) => getTipoMovimiento(m) === "ingreso_extra");
-  const listaExtras = $("listaExtras");
-  if (listaExtras) {
-    listaExtras.innerHTML = extras.length
-      ? extras.slice().reverse().slice(0, 6).map((m) => `
-        <li>
-          <span>${m.nota || "Extra"} · ${m.fecha}</span>
-          <strong>+${money(m.monto)}</strong>
-        </li>
-      `).join("")
-      : `<li><span>Todavía no ha caído extra.</span><strong>${money(0)}</strong></li>`;
-  }
+  $("listaExtras").innerHTML = extras.length
+    ? extras.slice().reverse().slice(0, 6).map((m) => `
+      <li>
+        <span>${m.nota || "Extra"} · ${m.fecha}</span>
+        <strong>+${money(m.monto)}</strong>
+      </li>
+    `).join("")
+    : `<li><span>Todavía no ha caído extra.</span><strong>${money(0)}</strong></li>`;
 
   $("listaMovimientosLana").innerHTML = state.movimientosLana.slice().reverse().slice(0, 8).map((m) => {
     const tipo = getTipoMovimiento(m);
-    const esDescuento = tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo";
+    const esDescuento = ["no_recibido", "ahorro", "prestamo"].includes(tipo);
     const signo = esDescuento ? "-" : "+";
-    const etiqueta =
-      tipo === "ingreso_base" ? "Ya puso" :
-      tipo === "ingreso_extra" ? "Extra" :
-      tipo === "ahorro" ? "A La Marranita" :
-      tipo === "prestamo" ? "Prestaste" :
-      tipo === "prestamo_pagado" ? "Te pagaron" :
-      "No cayó";
+    const etiqueta = tipo === "ingreso_base" ? "Ya puso"
+      : tipo === "ingreso_extra" ? "Extra"
+      : tipo === "ahorro" ? "A La Marranita"
+      : tipo === "prestamo" ? "Prestado"
+      : tipo === "prestamo_pagado" ? "Me pagaron"
+      : "No cayó";
 
     return `
       <li>
@@ -401,49 +429,24 @@ function render() {
     `;
   }).join("");
 
-  const prestamosPendientes = state.prestamos.filter((p) => p.estado !== "pagado");
-  const listaPrestamos = $("listaPrestamos");
-  if (listaPrestamos) {
-    listaPrestamos.innerHTML = prestamosPendientes.length
-      ? prestamosPendientes.slice().reverse().map((p) => `
-        <li class="loan-row">
-          <span>${p.persona || "Alguien"} · ${p.fecha || getFechaHoy()}${p.nota ? ` · ${p.nota}` : ""}</span>
-          <div class="loan-actions">
-            <strong>${money(p.monto)}</strong>
-            <button class="mini-text" onclick="marcarPrestamoPagado('${p.id}')">Me pagó</button>
-          </div>
-        </li>
-      `).join("")
-      : `<li><span>Nadie te debe lana registrada.</span><strong>${money(0)}</strong></li>`;
-  }
+  $("listaPagos").innerHTML = state.pagos.length
+    ? state.pagos.map((p, index) => `
+      <li>
+        <span>${p.concepto || "Pago"}</span>
+        <strong>${money(p.monto)}</strong>
+        <button class="mini" onclick="borrarPago(${index})" aria-label="Borrar pago">×</button>
+      </li>
+    `).join("")
+    : `<li><span>Sin pagos apartados todavía.</span><strong>${money(0)}</strong></li>`;
 
-  const prestamosPagados = state.prestamos.filter((p) => p.estado === "pagado");
-  const listaPrestamosPagados = $("listaPrestamosPagados");
-  if (listaPrestamosPagados) {
-    listaPrestamosPagados.innerHTML = prestamosPagados.length
-      ? prestamosPagados.slice().reverse().slice(0, 4).map((p) => `
-        <li>
-          <span>${p.persona || "Alguien"} · pagó ${p.fechaPago || p.fecha}</span>
-          <strong>+${money(p.monto)}</strong>
-        </li>
-      `).join("")
-      : "";
-  }
-
-  $("listaPagos").innerHTML = state.pagos.map((p, index) => `
-    <li>
-      <span>${p.concepto || "Pago"}</span>
-      <strong>${money(p.monto)}</strong>
-      <button class="mini" onclick="borrarPago(${index})" aria-label="Borrar pago">×</button>
-    </li>
-  `).join("");
-
-  $("listaGastos").innerHTML = state.gastos.slice().reverse().slice(0, 8).map((g) => `
-    <li>
-      <span>${g.nota || "Gasto"} · ${g.fecha}</span>
-      <strong>${money(g.monto)}</strong>
-    </li>
-  `).join("");
+  $("listaGastos").innerHTML = state.gastos.length
+    ? state.gastos.slice().reverse().slice(0, 8).map((g) => `
+      <li>
+        <span>${g.nota || "Gasto"} · ${g.fecha}</span>
+        <strong>${money(g.monto)}</strong>
+      </li>
+    `).join("")
+    : `<li><span>Todavía no apuntas gastos.</span><strong>${money(0)}</strong></li>`;
 
   renderCharts();
 }
@@ -453,18 +456,20 @@ window.borrarPago = function(index) {
   saveState();
 };
 
-window.marcarPrestamoPagado = function(id) {
-  const prestamo = state.prestamos.find((p) => p.id === id);
-  if (!prestamo || prestamo.estado === "pagado") return;
+window.marcarPrestamoPagado = function(index) {
+  const prestamo = state.prestamos[index];
+  if (!prestamo || prestamo.status === "pagado") return;
 
-  prestamo.estado = "pagado";
+  if (!confirm(`¿Ya te pagó ${prestamo.persona || "esa persona"} ${money(prestamo.monto)}?`)) return;
+
+  prestamo.status = "pagado";
   prestamo.fechaPago = getFechaHoy();
   state.ingresoActual = Number(state.ingresoActual || 0) + Number(prestamo.monto || 0);
 
   state.movimientosLana.push({
     tipo: "prestamo_pagado",
     monto: Number(prestamo.monto || 0),
-    nota: `${prestamo.persona || "Alguien"} te pagó`,
+    nota: `Pagó ${prestamo.persona || "préstamo"}`,
     fecha: getFechaHoy()
   });
 
@@ -495,13 +500,13 @@ on("guardarIngreso", "click", () => {
     fecha: getFechaHoy()
   });
 
-  $("montoIngreso").value = "";
+  clearFields(["montoIngreso"]);
   saveState();
 });
 
 on("guardarExtra", "click", () => {
   const monto = Number($("montoExtra").value);
-  const nota = $("notaExtra").value.trim();
+  const nota = getConcepto("conceptoExtra", "otroExtra", "Lanita extra");
 
   if (!monto || monto <= 0) {
     alert("Pon cuánto te cayó de más.");
@@ -513,18 +518,17 @@ on("guardarExtra", "click", () => {
   state.movimientosLana.push({
     tipo: "ingreso_extra",
     monto,
-    nota: nota || "Lanita extra",
+    nota,
     fecha: getFechaHoy()
   });
 
-  $("montoExtra").value = "";
-  $("notaExtra").value = "";
+  clearFields(["montoExtra", "conceptoExtra", "otroExtra"]);
   saveState();
 });
 
 on("guardarNoRecibido", "click", () => {
   const monto = Number($("montoNoRecibido").value);
-  const nota = $("notaNoRecibido").value.trim();
+  const nota = getConcepto("conceptoNoRecibido", "otroNoRecibido", "Esto no cayó");
 
   if (!monto || monto <= 0) {
     alert("Pon cuánto no cayó.");
@@ -536,27 +540,26 @@ on("guardarNoRecibido", "click", () => {
   state.movimientosLana.push({
     tipo: "no_recibido",
     monto,
-    nota: nota || "Esto no cayó",
+    nota,
     fecha: getFechaHoy()
   });
 
-  $("montoNoRecibido").value = "";
-  $("notaNoRecibido").value = "";
+  clearFields(["montoNoRecibido", "conceptoNoRecibido", "otroNoRecibido"]);
   saveState();
 });
 
-on("guardarSobrante", "click", () => {
-  const totals = getTotals();
+on("guardarAhorro", "click", () => {
   const monto = Number($("montoAhorro").value);
-  const nota = $("notaAhorro").value.trim();
+  const nota = getConcepto("conceptoAhorro", "otroAhorro", "Guardadito");
+  const totals = getTotals();
 
   if (!monto || monto <= 0) {
-    alert("Pon cuánto vas a guardar en La Marranita.");
+    alert("Pon cuánto vas a meter al cochinito.");
     return;
   }
 
-  if (monto > totals.dineroLibre) {
-    alert(`Esa lana todavía no está libre. Libre tienes ${money(totals.dineroLibre)}.`);
+  if (monto > totals.dineroTotal) {
+    alert("Esa lana no está disponible ahorita. Baja el monto para no descuadrarte.");
     return;
   }
 
@@ -566,47 +569,45 @@ on("guardarSobrante", "click", () => {
   const ahorro = {
     tipo: "ahorro",
     monto,
-    nota: nota || "Guardado en La Marranita",
+    nota,
     fecha: getFechaHoy()
   };
 
   state.ahorros.push(ahorro);
   state.movimientosLana.push(ahorro);
-  $("montoAhorro").value = "";
-  $("notaAhorro").value = "";
+  clearFields(["montoAhorro", "conceptoAhorro", "otroAhorro"]);
   saveState();
 });
 
-
 on("guardarPrestamo", "click", () => {
-  const persona = $("personaPrestamo").value.trim();
   const monto = Number($("montoPrestamo").value);
-  const fecha = $("fechaPrestamo").value || getFechaHoy();
-  const nota = $("notaPrestamo").value.trim();
+  const persona = $("personaPrestamo").value.trim();
+  const nota = getConcepto("conceptoPrestamo", "otroPrestamo", "Préstamo");
+  const fechaPromesa = $("fechaPrestamo").value;
   const totals = getTotals();
+
+  if (!monto || monto <= 0) {
+    alert("Pon cuánto prestaste.");
+    return;
+  }
 
   if (!persona) {
     alert("Pon a quién le prestaste.");
     return;
   }
 
-  if (!monto || monto <= 0) {
-    alert("Pon cuánto le prestaste.");
+  if (monto > totals.dineroTotal) {
+    alert("No parece que tengas esa lana disponible. Revisa el monto antes de apuntarlo.");
     return;
   }
 
-  if (monto > totals.dineroLibre) {
-    const sigue = confirm(`Libre tienes ${money(totals.dineroLibre)}. Si prestas más, te puedes apretar. ¿Aun así lo apunto?`);
-    if (!sigue) return;
-  }
-
   const prestamo = {
-    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-    persona,
     monto,
-    fecha,
-    nota: nota || "Préstamo",
-    estado: "pendiente"
+    persona,
+    nota,
+    fechaPromesa,
+    fecha: getFechaHoy(),
+    status: "pendiente"
   };
 
   state.prestamos.push(prestamo);
@@ -614,20 +615,17 @@ on("guardarPrestamo", "click", () => {
   state.movimientosLana.push({
     tipo: "prestamo",
     monto,
-    nota: `${persona} · ${nota || "Préstamo"}`,
-    fecha
+    nota: `${persona} · ${nota}`,
+    fecha: getFechaHoy()
   });
 
-  $("personaPrestamo").value = "";
-  $("montoPrestamo").value = "";
-  $("fechaPrestamo").value = "";
-  $("notaPrestamo").value = "";
+  clearFields(["montoPrestamo", "personaPrestamo", "conceptoPrestamo", "otroPrestamo", "fechaPrestamo"]);
   saveState();
 });
 
 on("guardarPago", "click", () => {
-  const concepto = $("conceptoPago").value.trim();
   const monto = Number($("montoPago").value);
+  const concepto = getConcepto("conceptoPagoSelect", "conceptoPago", "Pago");
 
   if (!monto || monto <= 0) {
     alert("Pon el monto del pago.");
@@ -635,19 +633,18 @@ on("guardarPago", "click", () => {
   }
 
   state.pagos.push({
-    concepto: concepto || "Pago",
+    concepto,
     monto,
     fecha: getFechaHoy()
   });
 
-  $("conceptoPago").value = "";
-  $("montoPago").value = "";
+  clearFields(["montoPago", "conceptoPagoSelect", "conceptoPago"]);
   saveState();
 });
 
 on("guardarGasto", "click", () => {
   const monto = Number($("montoGasto").value);
-  const nota = $("notaGasto").value.trim();
+  const nota = getConcepto("notaGastoSelect", "notaGasto", "Gasto");
 
   if (!monto || monto <= 0) {
     alert("Pon cuánto salió.");
@@ -656,12 +653,11 @@ on("guardarGasto", "click", () => {
 
   state.gastos.push({
     monto,
-    nota: nota || "Gasto",
+    nota,
     fecha: getFechaHoy()
   });
 
-  $("montoGasto").value = "";
-  $("notaGasto").value = "";
+  clearFields(["montoGasto", "notaGastoSelect", "notaGasto"]);
   saveState();
 });
 
@@ -685,17 +681,18 @@ on("evaluarCompra", "click", () => {
 
 on("exportarCSV", "click", () => {
   const rows = [
-    ["tipo", "concepto_nota", "monto", "fecha"],
+    ["tipo", "concepto_nota", "monto", "fecha", "persona", "fecha_promesa", "status"],
     ...state.movimientosLana.map(m => {
       const tipo = getTipoMovimiento(m);
-      const monto = tipo === "no_recibido" || tipo === "ahorro" || tipo === "prestamo" ? -Math.abs(Number(m.monto)) : Number(m.monto);
-      return [tipo, m.nota, monto, m.fecha];
+      const monto = ["no_recibido", "ahorro", "prestamo"].includes(tipo) ? -Math.abs(Number(m.monto)) : Number(m.monto);
+      return [tipo, m.nota, monto, m.fecha, "", "", ""];
     }),
-    ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha]),
-    ...state.gastos.map(g => ["gasto", g.nota, -Math.abs(Number(g.monto)), g.fecha])
+    ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha, "", "", ""]),
+    ...state.gastos.map(g => ["gasto", g.nota, -Math.abs(Number(g.monto)), g.fecha, "", "", ""]),
+    ...state.prestamos.map(p => ["prestamo_detalle", p.nota, p.monto, p.fecha, p.persona, p.fechaPromesa || "", p.status])
   ];
 
-  const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const csv = rows.map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -716,4 +713,8 @@ if ("serviceWorker" in navigator) {
 }
 
 window.addEventListener("resize", renderCharts);
+document.querySelectorAll("details").forEach((section) => {
+  section.addEventListener("toggle", renderCharts);
+});
+
 render();
