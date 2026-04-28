@@ -1,0 +1,10 @@
+{
+  "name": "La Marrana",
+  "short_name": "La Marrana",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff7ef",
+  "theme_color": "#7A2E1D",
+  "description": "Aguanta hasta que ponga.",
+  "icons": []
+}

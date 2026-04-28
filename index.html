@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Marrana</title>
+  <meta name="theme-color" content="#7A2E1D" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <p class="eyebrow">La Marrana</p>
+      <h1>Aguanta hasta que ponga.</h1>
+      <p class="subtitle">Dime cuánto tienes, qué pagos vienen y cuándo te cae otra vez. Te digo si llegas.</p>
+    </header>
+
+    <section class="card status-card">
+      <p class="label">Estado</p>
+      <h2 id="estadoTexto">Vamos a repartir la lana</h2>
+      <p id="estadoMensaje">Registra cuánto tienes y cuándo te vuelve a caer.</p>
+    </section>
+
+    <section class="grid">
+      <div class="metric">
+        <span>Traes ahorita</span>
+        <strong id="dineroTotal">$0</strong>
+      </div>
+      <div class="metric">
+        <span>Ya tiene dueño</span>
+        <strong id="dineroDueno">$0</strong>
+      </div>
+      <div class="metric">
+        <span>Te queda libre</span>
+        <strong id="dineroLibre">$0</strong>
+      </div>
+      <div class="metric">
+        <span>Para gastar al día</span>
+        <strong id="gastoDiario">$0</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Ya puso</h3>
+      <div class="form">
+        <label>¿Cuánto te cayó?
+          <input id="montoIngreso" type="number" inputmode="decimal" placeholder="Ej. 5000">
+        </label>
+        <label>¿Cuándo vuelve a poner?
+          <input id="proximaFecha" type="date">
+        </label>
+        <button id="guardarIngreso">Guardar lana</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Pagos que ya tienen dueño</h3>
+      <div class="form">
+        <label>Concepto
+          <input id="conceptoPago" type="text" placeholder="Ej. renta, luz, internet">
+        </label>
+        <label>Monto
+          <input id="montoPago" type="number" inputmode="decimal" placeholder="Ej. 1200">
+        </label>
+        <button id="guardarPago">Apartar pago</button>
+      </div>
+      <ul id="listaPagos" class="list"></ul>
+    </section>
+
+    <section class="card">
+      <h3>Apuntar gasto</h3>
+      <div class="form">
+        <label>¿Cuánto salió?
+          <input id="montoGasto" type="number" inputmode="decimal" placeholder="Ej. 85">
+        </label>
+        <label>¿En qué se fue?
+          <input id="notaGasto" type="text" placeholder="Ej. comida, pasaje, gusto">
+        </label>
+        <button id="guardarGasto">Apuntar gasto</button>
+      </div>
+      <ul id="listaGastos" class="list"></ul>
+    </section>
+
+    <section class="card">
+      <h3>No te aloques</h3>
+      <p class="helper">Antes de comprar, checa si todavía llegas.</p>
+      <div class="form">
+        <label>¿Cuánto cuesta?
+          <input id="montoCompra" type="number" inputmode="decimal" placeholder="Ej. 600">
+        </label>
+        <button id="evaluarCompra">Checar compra</button>
+      </div>
+      <p id="resultadoCompra" class="result"></p>
+    </section>
+
+    <section class="card">
+      <h3>Exportar</h3>
+      <p class="helper">Baja tus movimientos en CSV. Sin nube, sin cuenta, sin vueltas.</p>
+      <button id="exportarCSV" class="secondary">Exportar CSV</button>
+      <button id="limpiarTodo" class="danger">Borrar todo</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
