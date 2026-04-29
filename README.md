@@ -1,4 +1,4 @@
-# La Marrana — v21
+# La Marrana — v22
 
 App web estática de finanzas simples para usar desde GitHub Pages y guardar en iPhone.
 

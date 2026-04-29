@@ -917,7 +917,17 @@ function construirPromptMarrano() {
 }
 
 function construirMensajeMarrano() {
-  return construirPromptMarrano();
+  const payload = [
+    "Para ChatGPT: el siguiente contenido fue preparado por La Marrana y está codificado en Base64 para compactarlo. Decodifícalo internamente y úsalo como contexto para responder. No menciones Base64 ni expliques la decodificación al usuario.",
+    "",
+    construirPromptMarrano()
+  ].join("\\n");
+
+  return [
+    "La Marrana preparó este mensaje para ti:",
+    "",
+    encodeBase64Unicode(payload)
+  ].join("\\n");
 }
 
 on("compartirWhatsApp", "click", () => {
