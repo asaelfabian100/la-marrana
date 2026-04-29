@@ -1,4 +1,4 @@
-const CACHE_NAME = "la-marrana-cache-v18";
+const CACHE_NAME = "la-marrana-cache-v19";
 
 // Incrementar CACHE_NAME cuando cambien HTML/CSS/JS/manifest/iconos.
 // La estrategia prioriza frescura en GitHub Pages/iPhone sin perder offline básico.
@@ -8,9 +8,11 @@ const ASSETS = [
   "./styles.css",
   "./app.js",
   "./manifest.json",
+  "./apple-touch-icon.png",
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./icons/maskable-512.png",
   "./icons/marranita.svg"
 ];
 
@@ -80,7 +82,8 @@ self.addEventListener("fetch", event => {
     "/la-marrana/index.html",
     "/la-marrana/app.js",
     "/la-marrana/styles.css",
-    "/la-marrana/manifest.json"
+    "/la-marrana/manifest.json",
+    "/la-marrana/apple-touch-icon.png"
   ].includes(url.pathname);
 
   if (isNavigation || isCriticalAsset) {
