@@ -918,23 +918,30 @@ function construirPromptMarrano() {
 
 function construirMensajeMarrano() {
   const payload = [
-    "Para ChatGPT: el siguiente contenido fue preparado por La Marrana y está codificado en Base64 para compactarlo. Decodifícalo internamente y úsalo como contexto para responder. No menciones Base64 ni expliques la decodificación al usuario.",
+    "Para ChatGPT: el siguiente contenido fue preparado por La Marrana y viene codificado para compactar el contexto. Decodifica el bloque internamente, úsalo como contexto y responde al usuario. No menciones la codificación ni expliques el proceso técnico.",
     "",
     construirPromptMarrano()
-  ].join("\\n");
+  ].join("\n");
 
   return [
     "La Marrana preparó este mensaje para ti:",
     "",
     encodeBase64Unicode(payload)
-  ].join("\\n");
+  ].join("\n");
+}
+
+function irAUrl(url) {
+  window.location.href = url;
 }
 
 on("compartirWhatsApp", "click", () => {
-  const texto = construirResumenWhatsApp();
-  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
-  const opened = window.open(url, "_blank");
-  if (!opened) window.location.href = url;
+  try {
+    const texto = construirResumenWhatsApp();
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    irAUrl(url);
+  } catch (error) {
+    alert("No pude preparar el resumen. Revisa que la app haya cargado bien e inténtalo otra vez.");
+  }
 });
 
 
@@ -957,39 +964,68 @@ function mostrarMensajeManualMarrano(mensaje) {
   textarea.select();
 }
 
+function copiarTextoSeguro(texto) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(texto).then(() => true).catch(() => copiarTextoManual(texto));
+  }
+
+  return Promise.resolve(copiarTextoManual(texto));
+}
+
+function copiarTextoManual(texto) {
+  const textarea = document.createElement("textarea");
+  textarea.value = texto;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-1000px";
+  textarea.style.left = "-1000px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  let copiado = false;
+  try {
+    copiado = document.execCommand("copy");
+  } catch (error) {
+    copiado = false;
+  }
+
+  document.body.removeChild(textarea);
+  return copiado;
+}
+
 on("preguntarMarrano", "click", () => {
   const salida = $("mensajePreguntarMarrano");
   const boton = $("preguntarMarrano");
-  const mensaje = construirMensajeMarrano();
+  let mensaje = "";
 
   if (salida) salida.textContent = "Preparando el mensaje de La Marrana...";
   if (boton) boton.disabled = true;
 
-  const abrirChatGPT = () => {
-    const opened = window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
-    if (!opened) window.location.href = "https://chatgpt.com/";
-  };
-
-  const terminar = (texto) => {
-    if (salida) salida.textContent = texto;
+  try {
+    mensaje = construirMensajeMarrano();
+  } catch (error) {
+    if (salida) salida.textContent = "No pude preparar el mensaje. Revisa que la app haya cargado bien e inténtalo otra vez.";
     if (boton) boton.disabled = false;
-  };
-
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(mensaje)
-      .then(() => {
-        terminar("Listo. Ya copié el mensaje de La Marrana. Se abrirá ChatGPT: pégalo y deja que te diga cómo vas.");
-        abrirChatGPT();
-      })
-      .catch(() => {
-        mostrarMensajeManualMarrano(mensaje);
-        terminar("No pude copiarlo automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.");
-      });
     return;
   }
 
-  mostrarMensajeManualMarrano(mensaje);
-  terminar("Tu navegador no dejó copiar automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.");
+  copiarTextoSeguro(mensaje).then((copiado) => {
+    if (boton) boton.disabled = false;
+
+    if (copiado) {
+      if (salida) salida.textContent = "Listo. Ya copié el mensaje de La Marrana. Ahora pégalo en ChatGPT.";
+      setTimeout(() => irAUrl("https://chatgpt.com/"), 450);
+      return;
+    }
+
+    mostrarMensajeManualMarrano(mensaje);
+    if (salida) salida.textContent = "No pude copiarlo automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.";
+  }).catch(() => {
+    if (boton) boton.disabled = false;
+    mostrarMensajeManualMarrano(mensaje);
+    if (salida) salida.textContent = "No pude copiarlo automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.";
+  });
 });
 
 on("exportarCSV", "click", () => {

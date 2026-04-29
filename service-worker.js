@@ -1,4 +1,4 @@
-const CACHE_NAME = "la-marrana-cache-v23";
+const CACHE_NAME = "la-marrana-cache-v24";
 
 // Incrementar CACHE_NAME cuando cambien HTML/CSS/JS/manifest/iconos.
 // La estrategia prioriza frescura en GitHub Pages/iPhone sin perder offline básico.
