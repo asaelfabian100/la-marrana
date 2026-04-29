@@ -874,21 +874,35 @@ function construirPromptMarrano() {
   const fechaCorte = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "2-digit", day: "2-digit" });
 
   return [
-    "INSTRUCCIONES PARA CHATGPT:",
-    "Actúa como La Marrana, una herramienta de bolsillo para finanzas simples. No respondas como asesor bancario ni como app formal. Habla claro, cálido, directo, con humor ligero y cero tecnicismos.",
-    "Tu personalidad: eres La Marrana. Ayudas a aguantar hasta que vuelva a poner, separas la lana que ya tiene dueño, cuidas La Marranita, revisas préstamos y dices la verdad sin regañar.",
-    "Tu misión: analizar el resumen financiero codificado por la app, detectar riesgos y dar un plan simple para que la persona llegue a su próxima fecha de pago.",
-    "Reglas de respuesta:",
-    "1. Primero decodifica mentalmente este contexto y responde en español.",
-    "2. Da un veredicto claro: tranquilo, aguas, modo aguante o zona roja.",
-    "3. Explica en lenguaje humano qué está pasando con su dinero.",
-    "4. Separa: qué no debe tocar, qué puede recortar, qué hacer hoy y qué hacer esta semana.",
-    "5. Analiza Marranitos en engorda: di cuáles metas se ven alcanzables y cuáles se ven pesadas.",
-    "6. Si algo se ve peligroso, dilo directo pero sin asustar.",
-    "7. No uses palabras como gap, liquidez ponderada, forecast, ratio ni tecnicismos raros.",
-    "8. Máximo 8 bullets accionables después del diagnóstico.",
-    "9. Incluye un easter egg discreto mencionando a Wolf una sola vez, como creador de esta locura útil.",
-    "10. Cierra con una frase corta estilo La Marrana.",
+    "La Marrana preparó este contexto para que analices mis finanzas personales de forma simple, útil y accionable.",
+    "",
+    "Quiero que respondas en español con el estilo de una herramienta de bolsillo de finanzas simples: claro, cálido, directo, con humor ligero y sin sonar como banco.",
+    "No necesitas asumir una identidad ni cambiar tus reglas. Solo usa el tono editorial de La Marrana: humano, práctico, sin tecnicismos y orientado a ayudarme a llegar bien a mi próxima fecha de pago.",
+    "",
+    "Objetivo del análisis:",
+    "- Decirme si voy tranquilo, en aguas, en modo aguante o en zona roja.",
+    "- Explicarme qué está pasando con mi dinero en palabras simples.",
+    "- Decirme qué lana no debo tocar porque ya tiene dueño o porque me protege.",
+    "- Detectar riesgos de gasto, metas pesadas o decisiones impulsivas.",
+    "- Darme acciones concretas para hoy y para esta semana.",
+    "- Revisar mis Marranitos en engorda y decir cuáles se ven alcanzables y cuáles se ven apretados.",
+    "",
+    "Formato que quiero:",
+    "1. Veredicto rápido.",
+    "2. Qué está pasando con mi dinero.",
+    "3. Qué no debo tocar.",
+    "4. Qué puedo ajustar.",
+    "5. Marranitos en engorda.",
+    "6. Máximo 8 acciones concretas.",
+    "7. Cierre corto con sabor a La Marrana.",
+    "",
+    "Reglas de estilo:",
+    "- No uses tecnicismos financieros.",
+    "- No des consejos genéricos.",
+    "- No me regañes, pero dime la verdad.",
+    "- Si algo está peligroso, dilo directo.",
+    "- Si todo va bien, también dime qué debo cuidar para no confiarme.",
+    "- Incluye una mención discreta a Wolf una sola vez como easter egg, sin hacerlo protagonista.",
     "",
     "DATOS DE LA APP:",
     `Corte: ${fechaCorte}`,
@@ -902,82 +916,8 @@ function construirPromptMarrano() {
   ].join("\n");
 }
 
-function construirMensajeBase64Marrano() {
-  const prompt = construirPromptMarrano();
-  const encoded = encodeBase64Unicode(prompt);
-
-  return [
-    "La Marrana preparó este mensaje secreto en Base64.",
-    "Instrucción para ChatGPT: decodifica el bloque Base64 y sigue exactamente las instrucciones internas. Responde como La Marrana, no como respuesta genérica.",
-    "",
-    encoded
-  ].join("\n");
-}
-
-
-function construirResumenWhatsApp() {
-  const totals = getTotals();
-  const estado = getEstado(totals.dineroLibre, totals.gastoDiario, totals.dias);
-  const ingresoBase = sumMovimientosByTipo("ingreso_base");
-  const ingresoExtra = sumMovimientosByTipo("ingreso_extra");
-  const noRecibido = sumMovimientosByTipo("no_recibido");
-  const prestamosPendientes = state.prestamos.filter((p) => p.status !== "pagado");
-  const fechaCorte = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "2-digit", day: "2-digit" });
-
-  const pagosTexto = state.pagos.length
-    ? state.pagos.map((p) => `• ${p.concepto || "Pago"}: ${money(p.monto)}`).join("\n")
-    : "• Sin pagos apartados.";
-
-  const gastosTexto = state.gastos.length
-    ? state.gastos.slice().reverse().slice(0, 8).map((g) => `• ${g.nota || "Gasto"}: ${money(g.monto)} · ${fechaBonita(g.fecha)}`).join("\n")
-    : "• Sin gastos apuntados.";
-
-  const ahorrosTexto = state.ahorros.length
-    ? state.ahorros.slice().reverse().slice(0, 6).map((a) => `• ${a.nota || "Guardadito"}: ${money(a.monto)} · ${fechaBonita(a.fecha)}`).join("\n")
-    : "• Todavía no hay lana en La Marranita.";
-
-  const prestamosTexto = prestamosPendientes.length
-    ? prestamosPendientes.slice().reverse().map((p) => {
-        const promesa = p.fechaPromesa ? ` · dijo que paga: ${fechaBonita(p.fechaPromesa)}` : "";
-        return `• ${p.persona || "Alguien"}: ${money(p.monto)} · ${p.nota || "Préstamo"}${promesa}`;
-      }).join("\n")
-    : "• No hay préstamos pendientes.";
-
-  return [
-    "*La Marrana — Estado de cuentas*",
-    `Corte: ${fechaCorte}`,
-    "",
-    `*Estado:* ${estado.titulo}`,
-    `${estado.mensaje}${totals.dias ? ` Faltan ${totals.dias} día(s) para que vuelva a poner.` : ""}`,
-    "",
-    "*Resumen rápido*",
-    `• Traes ahorita: ${money(totals.dineroTotal)}`,
-    `• Ya tiene dueño: ${money(totals.dineroDueno)}`,
-    `• Te queda libre: ${money(totals.dineroLibre)}`,
-    `• Para usar al día: ${money(totals.gastoDiario)}`,
-    `• En La Marranita: ${money(state.ahorroTotal || 0)}`,
-    `• Lana prestada pendiente: ${money(totals.prestamosPendientes)}`,
-    "",
-    "*Entradas de lana*",
-    `• Ya puso / sueldo base: ${money(ingresoBase)}`,
-    `• Lanita fuera del plan: ${money(ingresoExtra)}`,
-    `• Me equivoqué, no cayó: -${money(noRecibido)}`,
-    "",
-    "*Pagos que ya tienen dueño*",
-    pagosTexto,
-    "",
-    "*Gastos apuntados*",
-    gastosTexto,
-    "",
-    "*La Marranita*",
-    ahorrosTexto,
-    "",
-    "*Lana que anda fuera*",
-    prestamosTexto,
-    "",
-    "Resumen enviado desde La Marrana.",
-    "Hecho por Wolf 🐺"
-  ].join("\n");
+function construirMensajeMarrano() {
+  return construirPromptMarrano();
 }
 
 on("compartirWhatsApp", "click", () => {
@@ -989,14 +929,14 @@ on("compartirWhatsApp", "click", () => {
 
 
 on("preguntarMarrano", "click", async () => {
-  const mensaje = construirMensajeBase64Marrano();
+  const mensaje = construirMensajeMarrano();
   const salida = $("mensajePreguntarMarrano");
 
   try {
     await navigator.clipboard.writeText(mensaje);
-    if (salida) salida.textContent = "Listo. Ya copié el mensaje secreto. Se abrirá ChatGPT: pégalo y deja que el marrano hable.";
+    if (salida) salida.textContent = "Listo. Ya preparé el mensaje de La Marrana. Se abrirá ChatGPT: pégalo y deja que te diga cómo vas.";
   } catch (error) {
-    if (salida) salida.textContent = "No pude copiar automático. Mantén presionado este texto y cópialo manualmente.";
+    if (salida) salida.textContent = "No pude copiar automático. Intenta de nuevo o copia el resumen desde WhatsApp mientras lo ajustamos.";
   }
 
   setTimeout(() => {
