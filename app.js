@@ -18,7 +18,8 @@ function loadState() {
     gastos: [],
     movimientosLana: [],
     ahorros: [],
-    prestamos: []
+    prestamos: [],
+    marranitos: []
   };
 
   if (!raw) return defaultState;
@@ -34,7 +35,8 @@ function loadState() {
       gastos: Array.isArray(saved.gastos) ? saved.gastos : [],
       movimientosLana: Array.isArray(saved.movimientosLana) ? saved.movimientosLana : [],
       ahorros: Array.isArray(saved.ahorros) ? saved.ahorros : [],
-      prestamos: Array.isArray(saved.prestamos) ? saved.prestamos : []
+      prestamos: Array.isArray(saved.prestamos) ? saved.prestamos : [],
+      marranitos: Array.isArray(saved.marranitos) ? saved.marranitos : []
     };
   } catch (error) {
     return defaultState;
@@ -448,6 +450,37 @@ function render() {
     `).join("")
     : `<li><span>Todavía no apuntas gastos.</span><strong>${money(0)}</strong></li>`;
 
+
+  const marranitosTotal = $("marranitosTotal");
+  if (marranitosTotal) {
+    const totalMarranitos = state.marranitos.reduce((sum, m) => sum + Number(m.actual || 0), 0);
+    marranitosTotal.textContent = money(totalMarranitos);
+  }
+
+  const listaMarranitos = $("listaMarranitos");
+  if (listaMarranitos) {
+    listaMarranitos.innerHTML = state.marranitos.length
+      ? state.marranitos.slice().reverse().map((m) => {
+        const index = state.marranitos.indexOf(m);
+        const s = getMarranitoStatus(m);
+        const avance = s.objetivo > 0 ? Math.min((s.actual / s.objetivo) * 100, 100) : 0;
+        return `
+          <li class="stacked-item goal-item ${s.clase}">
+            <span>
+              <strong>${m.nombre || "Marranito"}</strong> · falta ${money(s.falta)} · ${fechaBonita(m.fechaLimite)}<br>
+              <small>${s.titulo}. ${s.mensaje}</small>
+              <span class="goal-progress" aria-hidden="true"><span style="width:${avance}%"></span></span>
+            </span>
+            <span class="row-actions">
+              <strong>${money(s.actual)} / ${money(s.objetivo)}</strong>
+              <button class="mini" onclick="borrarMarranito(${index})" aria-label="Borrar marranito">×</button>
+            </span>
+          </li>
+        `;
+      }).join("")
+      : `<li><span>Todavía no tienes marranitos en engorda.</span><strong>${money(0)}</strong></li>`;
+  }
+
   const ultimaMovimientoFecha = $("ultimaMovimientoFecha");
   if (ultimaMovimientoFecha) ultimaMovimientoFecha.textContent = getUltimoMovimientoFecha();
 
@@ -475,6 +508,15 @@ window.marcarPrestamoPagado = function(index) {
     fecha: getFechaHoy()
   });
 
+  saveState();
+};
+
+
+window.borrarMarranito = function(index) {
+  const meta = state.marranitos[index];
+  if (!meta) return;
+  if (!confirm(`¿Borrar el marranito "${meta.nombre || "sin nombre"}"?`)) return;
+  state.marranitos.splice(index, 1);
   saveState();
 };
 
@@ -625,6 +667,58 @@ on("guardarPrestamo", "click", () => {
   saveState();
 });
 
+
+on("guardarMarranito", "click", () => {
+  const nombre = $("nombreMarranito").value.trim();
+  const objetivo = Number($("metaMarranito").value);
+  const actual = Number($("actualMarranito").value || 0);
+  const fechaLimite = $("fechaMarranito").value;
+  const semanal = Number($("semanalMarranito").value || 0);
+
+  if (!nombre) {
+    alert("Ponle nombre a este marranito.");
+    return;
+  }
+
+  if (!objetivo || objetivo <= 0) {
+    alert("Pon cuánto quieres guardar.");
+    return;
+  }
+
+  if (actual < 0 || actual > objetivo) {
+    alert("Lo que llevas guardado no puede ser mayor a la meta.");
+    return;
+  }
+
+  if (!fechaLimite) {
+    alert("Pon para cuándo quieres juntar esa lana.");
+    return;
+  }
+
+  if (daysUntil(fechaLimite) <= 0) {
+    alert("Pon una fecha futura para que La Marrana pueda calcular el ritmo.");
+    return;
+  }
+
+  const meta = {
+    nombre,
+    objetivo,
+    actual,
+    fechaLimite,
+    semanal,
+    fecha: getFechaHoy()
+  };
+
+  const status = getMarranitoStatus(meta);
+  if (status.clase === "roja" && !confirm(`${status.titulo}. ${status.mensaje} ¿Aun así quieres crear este marranito?`)) {
+    return;
+  }
+
+  state.marranitos.push(meta);
+  clearFields(["nombreMarranito", "metaMarranito", "actualMarranito", "fechaMarranito", "semanalMarranito"]);
+  saveState();
+});
+
 on("guardarPago", "click", () => {
   const monto = Number($("montoPago").value);
   const concepto = getConcepto("conceptoPagoSelect", "conceptoPago", "Pago");
@@ -695,7 +789,8 @@ function getUltimoMovimientoFecha() {
     ...state.gastos.map((g) => g.fecha),
     ...state.ahorros.map((a) => a.fecha),
     ...state.prestamos.map((p) => p.fecha),
-    ...state.prestamos.map((p) => p.fechaPago)
+    ...state.prestamos.map((p) => p.fechaPago),
+    ...state.marranitos.map((m) => m.fecha)
   ].filter(Boolean);
 
   if (!fechas.length) return "Todavía sin movimientos";
@@ -707,6 +802,118 @@ function sumMovimientosByTipo(tipoBuscado) {
     .filter((m) => getTipoMovimiento(m) === tipoBuscado)
     .reduce((sum, item) => sum + Number(item.monto || 0), 0);
 }
+
+function getMarranitoStatus(meta) {
+  const objetivo = Number(meta.objetivo || 0);
+  const actual = Number(meta.actual || 0);
+  const falta = Math.max(objetivo - actual, 0);
+  const dias = daysUntil(meta.fechaLimite);
+  const semanas = Math.max(dias / 7, 1);
+  const diarioNecesario = dias > 0 ? falta / dias : falta;
+  const semanalNecesario = falta / semanas;
+  const totals = getTotals();
+  const libre = Math.max(Number(totals.dineroLibre || 0), 0);
+  const semanalUsuario = Number(meta.semanal || 0);
+  const esfuerzoSemanal = libre > 0 ? semanalNecesario / libre : Infinity;
+  const esfuerzoUsuario = semanalUsuario > 0 && libre > 0 ? semanalUsuario / libre : 0;
+
+  let clase = "tranquilo";
+  let titulo = "Se ve alcanzable";
+  let mensaje = `Guarda ${money(semanalNecesario)} por semana o ${money(diarioNecesario)} al día.`;
+
+  if (falta <= 0) {
+    clase = "tranquilo";
+    titulo = "Marranito lleno";
+    mensaje = "Ya juntaste esta meta. No te aloques: esa lana ya tiene misión.";
+  } else if (dias <= 0) {
+    clase = "roja";
+    titulo = "La fecha ya llegó";
+    mensaje = `Todavía faltan ${money(falta)}. Hay que mover la fecha o bajar la meta.`;
+  } else if (libre <= 0) {
+    clase = "roja";
+    titulo = "Ahorita no hay lana libre";
+    mensaje = `Para llegar necesitas ${money(semanalNecesario)} por semana, pero hoy no hay margen.`;
+  } else if (esfuerzoSemanal >= 0.75 || esfuerzoUsuario >= 0.75) {
+    clase = "roja";
+    titulo = "Se ve muy pesado";
+    mensaje = `Necesitas ${money(semanalNecesario)} por semana. Con tu lana libre actual, esto te puede meter en conflicto.`;
+  } else if (esfuerzoSemanal >= 0.45 || esfuerzoUsuario >= 0.45) {
+    clase = "aguante";
+    titulo = "Se puede, pero apretado";
+    mensaje = `Guarda cerca de ${money(semanalNecesario)} por semana. Hazlo solo si no descuidas pagos con dueño.`;
+  } else if (esfuerzoSemanal >= 0.25 || esfuerzoUsuario >= 0.25) {
+    clase = "aguas";
+    titulo = "Va, pero con cuidado";
+    mensaje = `El ritmo sugerido es ${money(semanalNecesario)} por semana. No te comas el colchón.`;
+  }
+
+  if (semanalUsuario > 0 && semanalUsuario < semanalNecesario && falta > 0 && dias > 0) {
+    const semanasConUsuario = Math.ceil(falta / semanalUsuario);
+    mensaje += ` Con ${money(semanalUsuario)} por semana tardarías aprox. ${semanasConUsuario} semana(s).`;
+  }
+
+  return { objetivo, actual, falta, dias, diarioNecesario, semanalNecesario, clase, titulo, mensaje };
+}
+
+function textoMarranitosParaPrompt() {
+  if (!state.marranitos.length) return "• Sin marranitos en engorda todavía.";
+
+  return state.marranitos.map((m) => {
+    const s = getMarranitoStatus(m);
+    return `• ${m.nombre || "Marranito"}: objetivo ${money(s.objetivo)}, lleva ${money(s.actual)}, falta ${money(s.falta)}, fecha ${fechaBonita(m.fechaLimite)}, sugerido ${money(s.semanalNecesario)} semanal / ${money(s.diarioNecesario)} diario, estado: ${s.titulo}`;
+  }).join("\n");
+}
+
+function encodeBase64Unicode(texto) {
+  return btoa(unescape(encodeURIComponent(texto)));
+}
+
+function construirPromptMarrano() {
+  const resumen = construirResumenWhatsApp();
+  const totals = getTotals();
+  const fechaCorte = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "2-digit", day: "2-digit" });
+
+  return [
+    "INSTRUCCIONES PARA CHATGPT:",
+    "Actúa como La Marrana, una herramienta de bolsillo para finanzas simples. No respondas como asesor bancario ni como app formal. Habla claro, cálido, directo, con humor ligero y cero tecnicismos.",
+    "Tu personalidad: eres La Marrana. Ayudas a aguantar hasta que vuelva a poner, separas la lana que ya tiene dueño, cuidas La Marranita, revisas préstamos y dices la verdad sin regañar.",
+    "Tu misión: analizar el resumen financiero codificado por la app, detectar riesgos y dar un plan simple para que la persona llegue a su próxima fecha de pago.",
+    "Reglas de respuesta:",
+    "1. Primero decodifica mentalmente este contexto y responde en español.",
+    "2. Da un veredicto claro: tranquilo, aguas, modo aguante o zona roja.",
+    "3. Explica en lenguaje humano qué está pasando con su dinero.",
+    "4. Separa: qué no debe tocar, qué puede recortar, qué hacer hoy y qué hacer esta semana.",
+    "5. Analiza Marranitos en engorda: di cuáles metas se ven alcanzables y cuáles se ven pesadas.",
+    "6. Si algo se ve peligroso, dilo directo pero sin asustar.",
+    "7. No uses palabras como gap, liquidez ponderada, forecast, ratio ni tecnicismos raros.",
+    "8. Máximo 8 bullets accionables después del diagnóstico.",
+    "9. Incluye un easter egg discreto mencionando a Wolf una sola vez, como creador de esta locura útil.",
+    "10. Cierra con una frase corta estilo La Marrana.",
+    "",
+    "DATOS DE LA APP:",
+    `Corte: ${fechaCorte}`,
+    `Dinero libre actual: ${money(totals.dineroLibre)}`,
+    `Días para que vuelva a poner: ${totals.dias}`,
+    "",
+    resumen,
+    "",
+    "*Marranitos en engorda*",
+    textoMarranitosParaPrompt()
+  ].join("\n");
+}
+
+function construirMensajeBase64Marrano() {
+  const prompt = construirPromptMarrano();
+  const encoded = encodeBase64Unicode(prompt);
+
+  return [
+    "La Marrana preparó este mensaje secreto en Base64.",
+    "Instrucción para ChatGPT: decodifica el bloque Base64 y sigue exactamente las instrucciones internas. Responde como La Marrana, no como respuesta genérica.",
+    "",
+    encoded
+  ].join("\n");
+}
+
 
 function construirResumenWhatsApp() {
   const totals = getTotals();
@@ -780,6 +987,23 @@ on("compartirWhatsApp", "click", () => {
   if (!opened) window.location.href = url;
 });
 
+
+on("preguntarMarrano", "click", async () => {
+  const mensaje = construirMensajeBase64Marrano();
+  const salida = $("mensajePreguntarMarrano");
+
+  try {
+    await navigator.clipboard.writeText(mensaje);
+    if (salida) salida.textContent = "Listo. Ya copié el mensaje secreto. Se abrirá ChatGPT: pégalo y deja que el marrano hable.";
+  } catch (error) {
+    if (salida) salida.textContent = "No pude copiar automático. Mantén presionado este texto y cópialo manualmente.";
+  }
+
+  setTimeout(() => {
+    window.open("https://chat.openai.com/", "_blank");
+  }, 450);
+});
+
 on("exportarCSV", "click", () => {
   const rows = [
     ["tipo", "concepto_nota", "monto", "fecha", "persona", "fecha_promesa", "status"],
@@ -790,7 +1014,8 @@ on("exportarCSV", "click", () => {
     }),
     ...state.pagos.map(p => ["pago_con_dueno", p.concepto, p.monto, p.fecha, "", "", ""]),
     ...state.gastos.map(g => ["gasto", g.nota, -Math.abs(Number(g.monto)), g.fecha, "", "", ""]),
-    ...state.prestamos.map(p => ["prestamo_detalle", p.nota, p.monto, p.fecha, p.persona, p.fechaPromesa || "", p.status])
+    ...state.prestamos.map(p => ["prestamo_detalle", p.nota, p.monto, p.fecha, p.persona, p.fechaPromesa || "", p.status]),
+    ...state.marranitos.map(m => ["marranito_en_engorda", m.nombre, m.objetivo, m.fecha, "", m.fechaLimite || "", `actual:${m.actual || 0}|semanal:${m.semanal || 0}`])
   ];
 
   const csv = rows.map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");

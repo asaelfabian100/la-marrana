@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>La Marrana</title>
   <meta name="theme-color" content="#7A2E1D" />
-  <link rel="icon" type="image/svg+xml" href="icons/marranita.svg?v=19" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=19" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=19" />
-  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=19" />
+  <link rel="icon" type="image/svg+xml" href="icons/marranita.svg?v=20" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20" />
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=20" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -236,6 +236,36 @@
       <ul id="listaAhorros" class="list"></ul>
     </details>
 
+    <details class="card section-toggle goals-card" open>
+      <summary>
+        <span>
+          <small>Marranitos en engorda</small>
+          <strong>Metas de ahorro</strong>
+        </span>
+        <b id="marranitosTotal">$0</b>
+      </summary>
+      <p class="helper">Ponle nombre a cada meta, fecha límite y cuánto quieres juntar. La Marrana te dice si se ve alcanzable o si te vas a apretar.</p>
+      <div class="form">
+        <label>¿Para qué estás engordando este marranito?
+          <input id="nombreMarranito" type="text" placeholder="Ej. tenis, viaje, emergencia">
+        </label>
+        <label>¿Cuánto quieres guardar?
+          <input id="metaMarranito" type="number" inputmode="decimal" placeholder="Ej. 3000">
+        </label>
+        <label>¿Cuánto llevas guardado? <span class="label-hint">opcional</span>
+          <input id="actualMarranito" type="number" inputmode="decimal" placeholder="Ej. 500">
+        </label>
+        <label>¿Para cuándo lo quieres?
+          <input id="fechaMarranito" type="date">
+        </label>
+        <label>¿Cuánto crees que puedes guardar por semana? <span class="label-hint">opcional</span>
+          <input id="semanalMarranito" type="number" inputmode="decimal" placeholder="Ej. 300">
+        </label>
+        <button id="guardarMarranito" class="secondary">Crear marranito</button>
+      </div>
+      <ul id="listaMarranitos" class="list goal-list"></ul>
+    </details>
+
     <details class="card section-toggle" open>
       <summary>
         <span>
@@ -272,6 +302,18 @@
       <ul id="listaPrestamos" class="list"></ul>
     </details>
 
+    <details class="card section-toggle ask-card">
+      <summary>
+        <span>
+          <small>Pregúntale al marrano</small>
+          <strong>Que ChatGPT revise cómo vas</strong>
+        </span>
+      </summary>
+      <p class="helper">La Marrana prepara un mensaje secreto para ChatGPT con tu resumen y un prompt especial. Se copia en Base64 y luego abre ChatGPT.</p>
+      <button id="preguntarMarrano" class="ask-button">Copiar mensaje para ChatGPT</button>
+      <p id="mensajePreguntarMarrano" class="result ask-result"></p>
+    </details>
+
     <details class="card section-toggle">
       <summary>
         <span>
@@ -298,7 +340,7 @@
     </details>
 
     <footer class="app-footer">
-      <p><strong>La Marrana</strong> · v19</p>
+      <p><strong>La Marrana</strong> · v20</p>
       <p>Hecho por Wolf 🐺</p>
     </footer>
   </main>

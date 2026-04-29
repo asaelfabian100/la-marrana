@@ -1,29 +1,24 @@
-# La Marrana — MVP 1
+# La Marrana — v20
 
-Primera versión funcional de la app **La Marrana**.
+App web estática de finanzas simples para usar desde GitHub Pages y guardar en iPhone.
 
 ## Qué hace
 
-- Registra cuánto dinero tienes
-- Guarda la próxima fecha de pago
-- Registra pagos que ya tienen dueño
+- Registra ingreso base con “Ya puso”
+- Registra ingresos extra con “Me cayó extra”
+- Corrige dinero no recibido
+- Aparta pagos que ya tienen dueño
 - Apunta gastos
-- Calcula:
-  - dinero total
-  - dinero con dueño
-  - dinero libre
-  - gasto diario recomendado
-  - estado: vas tranquilo, aguas, modo aguante o zona roja
+- Maneja La Marranita como ahorro manual
+- Registra préstamos / lana que anda fuera
+- Marca préstamos como pagados
 - Evalúa compras con “No te aloques”
+- Crea metas de ahorro en “Marranitos en engorda”
+- Copia un prompt en Base64 para “Pregúntale al marrano” en ChatGPT
 - Exporta movimientos en CSV
+- Manda resumen por WhatsApp
+- Tiene borrado seguro con presión sostenida
 - Funciona offline después de cargarse una vez
-
-## Cómo usar
-
-1. Sube estos archivos a un repositorio en GitHub.
-2. Activa GitHub Pages.
-3. Abre el link en Safari desde iPhone.
-4. Usa “Agregar a pantalla de inicio”.
 
 ## Archivos
 
@@ -31,8 +26,10 @@ Primera versión funcional de la app **La Marrana**.
 - `styles.css` — diseño visual
 - `app.js` — lógica y cálculos
 - `manifest.json` — configuración PWA
-- `service-worker.js` — modo offline
+- `service-worker.js` — caché/offline
+- `apple-touch-icon.png` — ícono iPhone
+- `icons/` — íconos PWA
 
 ## Nota
 
-Esta versión usa `localStorage` para simplificar el MVP. En una siguiente versión se puede migrar a IndexedDB.
+La app usa `localStorage`. No requiere cuenta, servidor ni base de datos.

@@ -756,3 +756,67 @@ select + input {
     text-align: left;
   }
 }
+
+
+/* v20: Marranitos en engorda y Pregúntale al marrano */
+.goals-card {
+  background: linear-gradient(180deg, rgba(255, 254, 253, .96), rgba(255, 241, 231, .96));
+}
+
+.goals-card > summary b {
+  color: var(--brand);
+}
+
+.goal-list .goal-item {
+  align-items: flex-start;
+}
+
+.goal-item.tranquilo small { color: var(--green); }
+.goal-item.aguas small { color: var(--yellow); }
+.goal-item.aguante small { color: var(--orange); }
+.goal-item.roja small { color: var(--red); }
+
+.goal-progress {
+  display: block;
+  width: 100%;
+  height: 9px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(143, 52, 36, .12);
+}
+
+.goal-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+}
+
+.ask-card {
+  background:
+    radial-gradient(circle at top right, rgba(245, 222, 213, .9), transparent 42%),
+    rgba(255, 254, 253, .96);
+}
+
+.ask-button {
+  background: var(--brand-dark);
+}
+
+.ask-result {
+  margin-bottom: 0;
+  color: var(--brand-dark);
+  font-size: 14px;
+}
+
+@media (max-width: 420px) {
+  .goal-item {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  .goal-item .row-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
