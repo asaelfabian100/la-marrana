@@ -1,4 +1,4 @@
-# La Marrana — v22
+# La Marrana — v23
 
 App web estática de finanzas simples para usar desde GitHub Pages y guardar en iPhone.
 
@@ -14,7 +14,7 @@ App web estática de finanzas simples para usar desde GitHub Pages y guardar en 
 - Marca préstamos como pagados
 - Evalúa compras con “No te aloques”
 - Crea metas de ahorro en “Marranitos en engorda”
-- Prepara un mensaje especial para “Pregúntale al marrano” en ChatGPT
+- Prepara y copia un mensaje especial para “Pregúntale al marrano” en ChatGPT
 - Exporta movimientos en CSV
 - Manda resumen por WhatsApp
 - Tiene borrado seguro con presión sostenida

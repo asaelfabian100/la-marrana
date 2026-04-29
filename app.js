@@ -938,20 +938,58 @@ on("compartirWhatsApp", "click", () => {
 });
 
 
-on("preguntarMarrano", "click", async () => {
-  const mensaje = construirMensajeMarrano();
+function mostrarMensajeManualMarrano(mensaje) {
   const salida = $("mensajePreguntarMarrano");
+  if (!salida) return;
 
-  try {
-    await navigator.clipboard.writeText(mensaje);
-    if (salida) salida.textContent = "Listo. Ya preparé el mensaje de La Marrana. Se abrirá ChatGPT: pégalo y deja que te diga cómo vas.";
-  } catch (error) {
-    if (salida) salida.textContent = "No pude copiar automático. Intenta de nuevo o copia el resumen desde WhatsApp mientras lo ajustamos.";
+  let textarea = $("mensajeMarranoManual");
+  if (!textarea) {
+    textarea = document.createElement("textarea");
+    textarea.id = "mensajeMarranoManual";
+    textarea.className = "manual-copy-box";
+    textarea.readOnly = true;
+    salida.insertAdjacentElement("afterend", textarea);
   }
 
-  setTimeout(() => {
-    window.open("https://chat.openai.com/", "_blank");
-  }, 450);
+  textarea.value = mensaje;
+  textarea.hidden = false;
+  textarea.focus();
+  textarea.select();
+}
+
+on("preguntarMarrano", "click", () => {
+  const salida = $("mensajePreguntarMarrano");
+  const boton = $("preguntarMarrano");
+  const mensaje = construirMensajeMarrano();
+
+  if (salida) salida.textContent = "Preparando el mensaje de La Marrana...";
+  if (boton) boton.disabled = true;
+
+  const abrirChatGPT = () => {
+    const opened = window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = "https://chatgpt.com/";
+  };
+
+  const terminar = (texto) => {
+    if (salida) salida.textContent = texto;
+    if (boton) boton.disabled = false;
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(mensaje)
+      .then(() => {
+        terminar("Listo. Ya copié el mensaje de La Marrana. Se abrirá ChatGPT: pégalo y deja que te diga cómo vas.");
+        abrirChatGPT();
+      })
+      .catch(() => {
+        mostrarMensajeManualMarrano(mensaje);
+        terminar("No pude copiarlo automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.");
+      });
+    return;
+  }
+
+  mostrarMensajeManualMarrano(mensaje);
+  terminar("Tu navegador no dejó copiar automático. Te dejé el mensaje abajo: cópialo y pégalo en ChatGPT.");
 });
 
 on("exportarCSV", "click", () => {
